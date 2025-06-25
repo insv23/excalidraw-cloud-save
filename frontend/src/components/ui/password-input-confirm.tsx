@@ -33,7 +33,6 @@ const PasswordInputConfirm = React.forwardRef<
 			"idle" | "valid" | "invalid"
 		>("idle");
 		const [hasFocused, setHasFocused] = React.useState(false);
-		const debounceRef = React.useRef<NodeJS.Timeout | null>(null);
 
 		// Generate unique IDs for accessibility
 		const inputId = props.id || "confirm-password";
