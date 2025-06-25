@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -26,18 +26,64 @@ export function LoginForm({
 	const { data: session, isPending } = useSession();
 	const [currentTab, setCurrentTab] = useState("email");
 
-	const [email, setEmail] = useState("");
-	const [phoneNumber, setPhoneNumber] = useState("");
-	const [password, setPassword] = useState("");
-	const [rememberMe, setRememberMe] = useState(false);
+	// Form data grouped together
+	const [formData, setFormData] = useState({
+		email: "",
+		phoneNumber: "",
+		password: "",
+		rememberMe: false,
+	});
 
-	// Form validation states
-	const [emailValid, setEmailValid] = useState(false);
-	const [phoneValid, setPhoneValid] = useState(false);
+	// Validation state grouped together
+	const [validationState, setValidationState] = useState({
+		emailValid: false,
+		phoneValid: false,
+	});
+
+	// Independent UI state
 	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	// Destructure for easier access
+	const { email, phoneNumber, password, rememberMe } = formData;
+	const { emailValid, phoneValid } = validationState;
 
 	// Password validation (consistent with registration form)
 	const passwordValid = password.length >= 8;
+
+	// Optimized input change handlers with useCallback
+	const handleEmailChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			setFormData((prev) => ({ ...prev, email: e.target.value }));
+		},
+		[],
+	);
+
+	const handlePhoneNumberChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			setFormData((prev) => ({ ...prev, phoneNumber: e.target.value }));
+		},
+		[],
+	);
+
+	const handlePasswordChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			setFormData((prev) => ({ ...prev, password: e.target.value }));
+		},
+		[],
+	);
+
+	const handleRememberMeChange = useCallback((checked: boolean) => {
+		setFormData((prev) => ({ ...prev, rememberMe: checked }));
+	}, []);
+
+	// Optimized validation change handlers
+	const handleEmailValidationChange = useCallback((isValid: boolean) => {
+		setValidationState((prev) => ({ ...prev, emailValid: isValid }));
+	}, []);
+
+	const handlePhoneValidationChange = useCallback((isValid: boolean) => {
+		setValidationState((prev) => ({ ...prev, phoneValid: isValid }));
+	}, []);
 
 	// Calculate if current form is valid
 	const isEmailFormValid = emailValid && passwordValid;
@@ -45,68 +91,72 @@ export function LoginForm({
 	const canSubmit =
 		currentTab === "email" ? isEmailFormValid : isPhoneFormValid;
 
+	// Optimized form submit handler
+	const handleSubmit = useCallback(
+		async (e: React.FormEvent) => {
+			e.preventDefault();
+
+			if (!canSubmit) return;
+
+			setIsSubmitting(true);
+
+			try {
+				if (currentTab === "email") {
+					// Handle email login
+					await signIn.email(
+						{
+							email,
+							password: password,
+							rememberMe: rememberMe,
+							callbackURL: "/", // Redirect to home after successful login
+						},
+						{
+							onRequest: () => {
+								toast.info("Signing in...");
+							},
+							onSuccess: () => {
+								toast.success("Welcome back!");
+							},
+							onError: (ctx) => {
+								toast.error(ctx.error.message);
+							},
+						},
+					);
+				} else {
+					// Handle phone login
+					await authClient.signIn.phoneNumber(
+						{
+							phoneNumber,
+							password: password,
+							rememberMe: rememberMe,
+						},
+						{
+							onRequest: () => {
+								toast.info("Signing in...");
+							},
+							onSuccess: () => {
+								toast.success("Welcome back!");
+							},
+							onError: (ctx) => {
+								toast.error(ctx.error.message);
+							},
+						},
+					);
+				}
+			} catch (error) {
+				consola.error("Login failed:", error);
+				toast.error("Login failed. Please try again.");
+			} finally {
+				setIsSubmitting(false);
+			}
+		},
+		[canSubmit, currentTab, email, phoneNumber, password, rememberMe],
+	);
+
 	// If user is already logged in, redirect to home
 	if (session && !isPending) {
 		return <Navigate to="/" replace />;
 	}
-
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-
-		if (!canSubmit) return;
-
-		setIsSubmitting(true);
-
-		try {
-			if (currentTab === "email") {
-				// Handle email login
-				await signIn.email(
-					{
-						email,
-						password: password,
-						rememberMe: rememberMe,
-						callbackURL: "/", // Redirect to home after successful login
-					},
-					{
-						onRequest: () => {
-							toast.info("Signing in...");
-						},
-						onSuccess: () => {
-							toast.success("Welcome back!");
-						},
-						onError: (ctx) => {
-							toast.error(ctx.error.message);
-						},
-					},
-				);
-			} else {
-				// Handle phone login
-				await authClient.signIn.phoneNumber(
-					{
-						phoneNumber,
-						password: password,
-						rememberMe: rememberMe,
-					},
-					{
-						onRequest: () => {
-							toast.info("Signing in...");
-						},
-						onSuccess: () => {
-							toast.success("Welcome back!");
-						},
-						onError: (ctx) => {
-							toast.error(ctx.error.message);
-						},
-					},
-				);
-			}
-		} catch (error) {
-			consola.error("Login failed:", error);
-			toast.error("Login failed. Please try again.");
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
 
 	return (
 		<div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -137,8 +187,8 @@ export function LoginForm({
 											placeholder="m@example.com"
 											autoComplete="email"
 											required
-											onValidationChange={setEmailValid}
-											onChange={(e) => setEmail(e.target.value)}
+											onValidationChange={handleEmailValidationChange}
+											onChange={handleEmailChange}
 										/>
 									</div>
 									<div className="grid gap-3">
@@ -156,7 +206,7 @@ export function LoginForm({
 												id="email-password"
 												name="password"
 												value={password}
-												onChange={(e) => setPassword(e.target.value)}
+												onChange={handlePasswordChange}
 												autoComplete="current-password"
 												aria-invalid={password.length > 0 && !passwordValid}
 												aria-describedby={
@@ -193,7 +243,7 @@ export function LoginForm({
 											name="rememberMe"
 											checked={rememberMe}
 											onCheckedChange={(checked) =>
-												setRememberMe(checked === true)
+												handleRememberMeChange(checked === true)
 											}
 										/>
 										<Label
@@ -216,8 +266,8 @@ export function LoginForm({
 											autoComplete="tel"
 											required
 											value={phoneNumber}
-											onChange={(e) => setPhoneNumber(e.target.value)}
-											onValidationChange={setPhoneValid}
+											onChange={handlePhoneNumberChange}
+											onValidationChange={handlePhoneValidationChange}
 										/>
 									</div>
 									<div className="grid gap-3">
@@ -235,7 +285,7 @@ export function LoginForm({
 												id="phone-password"
 												name="password"
 												value={password}
-												onChange={(e) => setPassword(e.target.value)}
+												onChange={handlePasswordChange}
 												autoComplete="current-password"
 												aria-invalid={password.length > 0 && !passwordValid}
 												aria-describedby={
@@ -272,7 +322,7 @@ export function LoginForm({
 											name="rememberMe"
 											checked={rememberMe}
 											onCheckedChange={(checked) =>
-												setRememberMe(checked === true)
+												handleRememberMeChange(checked === true)
 											}
 										/>
 										<Label

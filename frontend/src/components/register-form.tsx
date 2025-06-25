@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -30,31 +30,52 @@ export function RegisterForm({
 	const { data: session, isPending } = useSession();
 	const [currentTab, setCurrentTab] = useState("email");
 
-	const [email, setEmail] = useState("");
-	const [name, setName] = useState("");
-	const [password, setPassword] = useState("");
-	const [phoneNumber, setPhoneNumber] = useState("");
-	const [verificationCode, setVerificationCode] = useState("");
+	// Form data grouped together
+	const [formData, setFormData] = useState({
+		email: "",
+		name: "",
+		password: "",
+		phoneNumber: "",
+		verificationCode: "",
+	});
+
+	// Form validation states grouped together
+	const [validationState, setValidationState] = useState({
+		emailValid: false,
+		nameValid: false,
+		nameFocused: false,
+		passwordScore: 0,
+		passwordsMatch: false,
+		termsAccepted: false,
+		phoneValid: false,
+		verificationCodeValid: false,
+	});
+
+	// Phone OTP states grouped together
+	const [otpState, setOtpState] = useState({
+		otpSent: false,
+		countdown: 0,
+	});
+
+	// Independent UI state
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Refs for form elements
 	const verificationCodeRef = useRef<VerificationCodeInputRef>(null);
 
-	// Form validation states
-	const [emailValid, setEmailValid] = useState(false);
-	const [nameValid, setNameValid] = useState(false);
-	const [nameFocused, setNameFocused] = useState(false);
-	const [passwordScore, setPasswordScore] = useState(0);
-	const [passwordsMatch, setPasswordsMatch] = useState(false);
-	const [termsAccepted, setTermsAccepted] = useState(false);
-
-	// Phone-specific validation states
-	const [phoneValid, setPhoneValid] = useState(false);
-	const [verificationCodeValid, setVerificationCodeValid] = useState(false);
-
-	// Phone OTP states
-	const [otpSent, setOtpSent] = useState(false);
-	const [countdown, setCountdown] = useState(0);
-	const [isSubmitting, setIsSubmitting] = useState(false);
+	// Destructure for easier access
+	const { email, name, password, phoneNumber, verificationCode } = formData;
+	const {
+		emailValid,
+		nameValid,
+		nameFocused,
+		passwordScore,
+		passwordsMatch,
+		termsAccepted,
+		phoneValid,
+		verificationCodeValid,
+	} = validationState;
+	const { otpSent, countdown } = otpState;
 
 	// Calculate if current form is valid
 	const isEmailFormValid =
@@ -73,21 +94,77 @@ export function RegisterForm({
 	const canSubmit =
 		currentTab === "email" ? isEmailFormValid : isPhoneFormValid;
 
-	// Countdown timer for OTP
-	useEffect(() => {
-		if (countdown > 0) {
-			const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-			return () => clearTimeout(timer);
-		}
-	}, [countdown]);
+	// Optimized input change handlers with useCallback
+	const handleNameChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			setFormData((prev) => ({ ...prev, name: e.target.value }));
+		},
+		[],
+	);
 
-	// If user is already logged in, redirect to home
-	if (session && !isPending) {
-		return <Navigate to="/" replace />;
-	}
+	const handleEmailChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			setFormData((prev) => ({ ...prev, email: e.target.value }));
+		},
+		[],
+	);
+
+	const handlePasswordChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			setFormData((prev) => ({ ...prev, password: e.target.value }));
+		},
+		[],
+	);
+
+	const handlePhoneNumberChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			setFormData((prev) => ({ ...prev, phoneNumber: e.target.value }));
+		},
+		[],
+	);
+
+	// Optimized validation change handlers
+	const handleNameValidationChange = useCallback((isValid: boolean) => {
+		setValidationState((prev) => ({ ...prev, nameValid: isValid }));
+	}, []);
+
+	const handleNameFocus = useCallback(() => {
+		setValidationState((prev) => ({ ...prev, nameFocused: true }));
+	}, []);
+
+	const handleEmailValidationChange = useCallback((isValid: boolean) => {
+		setValidationState((prev) => ({ ...prev, emailValid: isValid }));
+	}, []);
+
+	const handlePasswordStrengthChange = useCallback((score: number) => {
+		setValidationState((prev) => ({ ...prev, passwordScore: score }));
+	}, []);
+
+	const handlePasswordsMatchChange = useCallback((match: boolean) => {
+		setValidationState((prev) => ({ ...prev, passwordsMatch: match }));
+	}, []);
+
+	const handlePhoneValidationChange = useCallback((isValid: boolean) => {
+		setValidationState((prev) => ({ ...prev, phoneValid: isValid }));
+	}, []);
+
+	const handleVerificationCodeChange = useCallback(
+		(isValid: boolean, code: string) => {
+			setValidationState((prev) => ({
+				...prev,
+				verificationCodeValid: isValid,
+			}));
+			setFormData((prev) => ({ ...prev, verificationCode: code }));
+		},
+		[],
+	);
+
+	const handleTermsChange = useCallback((checked: boolean) => {
+		setValidationState((prev) => ({ ...prev, termsAccepted: checked }));
+	}, []);
 
 	// Send OTP to phone number
-	const handleSendOtp = async () => {
+	const handleSendOtp = useCallback(async () => {
 		if (!phoneValid || countdown > 0) return;
 
 		try {
@@ -96,8 +173,7 @@ export function RegisterForm({
 				phoneNumber,
 			});
 
-			setOtpSent(true);
-			setCountdown(60); // Start 60 second countdown
+			setOtpState((prev) => ({ ...prev, otpSent: true, countdown: 60 }));
 			toast.success("Verification code sent!");
 
 			// Auto focus to verification code input
@@ -108,98 +184,127 @@ export function RegisterForm({
 			consola.error("Failed to send OTP:", error);
 			toast.error("Failed to send verification code");
 		}
-	};
+	}, [phoneValid, countdown, phoneNumber]);
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		if (currentTab === "email") {
-			// Handle email registration
-			setIsSubmitting(true);
-			try {
-				await signUp.email(
-					{
-						email,
-						name,
-						password: password,
-						callbackURL: "/", // Redirect to home after successful registration
-					},
-					{
-						onRequest: () => {
-							// Show loading state
-							toast.info("Creating account...");
+	const handleSubmit = useCallback(
+		async (e: React.FormEvent) => {
+			e.preventDefault();
+			if (currentTab === "email") {
+				// Handle email registration
+				setIsSubmitting(true);
+				try {
+					await signUp.email(
+						{
+							email,
+							name,
+							password: password,
+							callbackURL: "/", // Redirect to home after successful registration
 						},
-						onSuccess: () => {
-							toast.success("Registration successful! You are now signed in.");
-						},
-						onError: (ctx) => {
-							toast.error(ctx.error.message);
-						},
-					},
-				);
-			} catch (error) {
-				consola.error(error);
-				toast.error("An unexpected error occurred");
-			} finally {
-				setIsSubmitting(false);
-			}
-		} else {
-			// Handle phone registration
-			if (!otpSent) {
-				toast.error("Please send verification code first");
-				return;
-			}
-
-			if (!verificationCodeValid) {
-				toast.error("Please enter a valid verification code");
-				return;
-			}
-
-			setIsSubmitting(true);
-			try {
-				// Step 1: Create account with password first
-				const tempEmail = `${phoneNumber.replace(/[^0-9]/g, "")}@nomail.auth`;
-				await signUp.email(
-					{
-						email: tempEmail,
-						name: name,
-						password: password,
-						callbackURL: "/",
-					},
-					{
-						onRequest: () => {
-							toast.info("Creating account...");
-						},
-						onSuccess: async () => {
-							// Step 2: After successful account creation, verify phone number
-							try {
-								await authClient.phoneNumber.verify({
-									phoneNumber,
-									code: verificationCode,
-									updatePhoneNumber: true, // Update current user's phone number
-								});
+						{
+							onRequest: () => {
+								// Show loading state
+								toast.info("Creating account...");
+							},
+							onSuccess: () => {
 								toast.success(
-									"Registration successful! Phone number verified.",
+									"Registration successful! You are now signed in.",
 								);
-							} catch (verifyError) {
-								consola.error("Phone verification failed:", verifyError);
-								toast.error(
-									"Account created but phone verification failed. Please try again later.",
-								);
-							}
+							},
+							onError: (ctx) => {
+								toast.error(ctx.error.message);
+							},
 						},
-						onError: (ctx) => {
-							toast.error(ctx.error.message);
+					);
+				} catch (error) {
+					consola.error(error);
+					toast.error("An unexpected error occurred");
+				} finally {
+					setIsSubmitting(false);
+				}
+			} else {
+				// Handle phone registration
+				if (!otpSent) {
+					toast.error("Please send verification code first");
+					return;
+				}
+
+				if (!verificationCodeValid) {
+					toast.error("Please enter a valid verification code");
+					return;
+				}
+
+				setIsSubmitting(true);
+				try {
+					// Step 1: Create account with password first
+					const tempEmail = `${phoneNumber.replace(/[^0-9]/g, "")}@nomail.auth`;
+					await signUp.email(
+						{
+							email: tempEmail,
+							name: name,
+							password: password,
+							callbackURL: "/",
 						},
-					},
-				);
-			} catch (error) {
-				consola.error("Phone registration failed:", error);
-				toast.error("Registration failed. Please try again.");
-			} finally {
-				setIsSubmitting(false);
+						{
+							onRequest: () => {
+								toast.info("Creating account...");
+							},
+							onSuccess: async () => {
+								// Step 2: After successful account creation, verify phone number
+								try {
+									await authClient.phoneNumber.verify({
+										phoneNumber,
+										code: verificationCode,
+										updatePhoneNumber: true, // Update current user's phone number
+									});
+									toast.success(
+										"Registration successful! Phone number verified.",
+									);
+								} catch (verifyError) {
+									consola.error("Phone verification failed:", verifyError);
+									toast.error(
+										"Account created but phone verification failed. Please try again later.",
+									);
+								}
+							},
+							onError: (ctx) => {
+								toast.error(ctx.error.message);
+							},
+						},
+					);
+				} catch (error) {
+					consola.error("Phone registration failed:", error);
+					toast.error("Registration failed. Please try again.");
+				} finally {
+					setIsSubmitting(false);
+				}
 			}
+		},
+		[
+			currentTab,
+			email,
+			name,
+			password,
+			phoneNumber,
+			verificationCode,
+			otpSent,
+			verificationCodeValid,
+		],
+	);
+
+	// Countdown timer for OTP
+	useEffect(() => {
+		if (countdown > 0) {
+			const timer = setTimeout(() => {
+				setOtpState((prev) => ({ ...prev, countdown: countdown - 1 }));
+			}, 1000);
+			return () => clearTimeout(timer);
 		}
-	};
+	}, [countdown]);
+
+	// If user is already logged in, redirect to home
+	if (session && !isPending) {
+		return <Navigate to="/" replace />;
+	}
 
 	return (
 		<div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -230,9 +335,9 @@ export function RegisterForm({
 											id="name"
 											name="name"
 											value={name}
-											onChange={(e) => setName(e.target.value)}
-											onValidationChange={setNameValid}
-											onFocus={() => setNameFocused(true)}
+											onChange={handleNameChange}
+											onValidationChange={handleNameValidationChange}
+											onFocus={handleNameFocus}
 											focused={nameFocused}
 											required
 										/>
@@ -245,8 +350,8 @@ export function RegisterForm({
 											placeholder="m@example.com"
 											autoComplete="email"
 											required
-											onValidationChange={setEmailValid}
-											onChange={(e) => setEmail(e.target.value)}
+											onValidationChange={handleEmailValidationChange}
+											onChange={handleEmailChange}
 										/>
 									</div>
 									<div className="grid gap-3">
@@ -256,8 +361,8 @@ export function RegisterForm({
 											name="password"
 											showStrengthIndicator={true}
 											value={password}
-											onChange={(e) => setPassword(e.target.value)}
-											onStrengthChange={setPasswordScore}
+											onChange={handlePasswordChange}
+											onStrengthChange={handlePasswordStrengthChange}
 											autoComplete="new-password"
 											required
 										/>
@@ -268,7 +373,7 @@ export function RegisterForm({
 											id="confirm-password"
 											name="confirmPassword"
 											password={password}
-											onValidationChange={setPasswordsMatch}
+											onValidationChange={handlePasswordsMatchChange}
 											autoComplete="new-password"
 											required
 										/>
@@ -278,7 +383,7 @@ export function RegisterForm({
 										id="terms"
 										name="terms"
 										checked={termsAccepted}
-										onCheckedChange={setTermsAccepted}
+										onCheckedChange={handleTermsChange}
 									/>
 								</div>
 							</TabsContent>
@@ -291,9 +396,9 @@ export function RegisterForm({
 											id="phone-name"
 											name="phone-name"
 											value={name}
-											onChange={(e) => setName(e.target.value)}
-											onValidationChange={setNameValid}
-											onFocus={() => setNameFocused(true)}
+											onChange={handleNameChange}
+											onValidationChange={handleNameValidationChange}
+											onFocus={handleNameFocus}
 											focused={nameFocused}
 											required
 										/>
@@ -308,8 +413,8 @@ export function RegisterForm({
 												autoComplete="tel"
 												required
 												value={phoneNumber}
-												onChange={(e) => setPhoneNumber(e.target.value)}
-												onValidationChange={setPhoneValid}
+												onChange={handlePhoneNumberChange}
+												onValidationChange={handlePhoneValidationChange}
 											/>
 											<Button
 												variant="outline"
@@ -338,10 +443,7 @@ export function RegisterForm({
 												ref={verificationCodeRef}
 												id="verification-code"
 												maxLength={4}
-												onValidationChange={(isValid, code) => {
-													setVerificationCodeValid(isValid);
-													setVerificationCode(code);
-												}}
+												onValidationChange={handleVerificationCodeChange}
 											/>
 										</div>
 									</div>
@@ -352,8 +454,8 @@ export function RegisterForm({
 											name="password"
 											showStrengthIndicator={true}
 											value={password}
-											onChange={(e) => setPassword(e.target.value)}
-											onStrengthChange={setPasswordScore}
+											onChange={handlePasswordChange}
+											onStrengthChange={handlePasswordStrengthChange}
 											autoComplete="new-password"
 											required
 										/>
@@ -366,7 +468,7 @@ export function RegisterForm({
 											id="phone-confirm-password"
 											name="confirmPassword"
 											password={password}
-											onValidationChange={setPasswordsMatch}
+											onValidationChange={handlePasswordsMatchChange}
 											autoComplete="new-password"
 											required
 										/>
@@ -376,7 +478,7 @@ export function RegisterForm({
 										id="phone-terms"
 										name="phoneTerms"
 										checked={termsAccepted}
-										onCheckedChange={setTermsAccepted}
+										onCheckedChange={handleTermsChange}
 									/>
 								</div>
 							</TabsContent>
