@@ -1,7 +1,9 @@
 import * as React from "react";
 import { ArchiveX, Command, File, Inbox, Send, Trash2 } from "lucide-react";
+import { Navigate } from "react-router-dom";
 
 import { NavUser } from "@/components/nav-user";
+import { useSession } from "@/lib/auth-client";
 import { Label } from "@/components/ui/label";
 import {
 	Sidebar,
@@ -18,7 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
 
-// This is sample data
+// Navigation and mail data (keeping for demo purposes)
 const data = {
 	user: {
 		name: "shadcn",
@@ -142,11 +144,19 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+	// Get current user session
+	const { data: session } = useSession();
+
 	// Note: I'm using state to show active item.
 	// IRL you should use the url/router.
 	const [activeItem, setActiveItem] = React.useState(data.navMain[0]);
 	const [mails, setMails] = React.useState(data.mails);
 	const { setOpen } = useSidebar();
+
+	// If user is not logged in, redirect to login
+	if (!session || !session.user) {
+		return <Navigate to="/login" replace />;
+	}
 
 	return (
 		<Sidebar
@@ -215,7 +225,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					</SidebarGroup>
 				</SidebarContent>
 				<SidebarFooter>
-					<NavUser user={data.user} />
+					<NavUser
+						user={{
+							name: session.user.name,
+							email: session.user.email,
+							avatar: session.user.image,
+						}}
+					/>
 				</SidebarFooter>
 			</Sidebar>
 

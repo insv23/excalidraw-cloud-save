@@ -7,11 +7,81 @@ import { auth } from "@/lib/auth";
 
 const app = new Hono();
 
-// Enable CORS (optional)
-app.use("/api/auth/**", cors());
+// General request logging middleware
+app.use("*", async (c, next) => {
+	const start = Date.now();
+	const method = c.req.method;
+	const path = c.req.path;
 
-// Better-Auth route handler
-app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
+	if (!path.startsWith("/api/auth")) {
+		consola.debug(`📥 ${method} ${path}`);
+	}
+
+	await next();
+
+	const duration = Date.now() - start;
+	if (!path.startsWith("/api/auth")) {
+		consola.debug(`📤 ${method} ${path} - ${c.res.status} (${duration}ms)`);
+	}
+});
+
+// Enable CORS with specific origin for credentials support
+app.use(
+	"/api/auth/**",
+	cors({
+		origin: ["http://localhost:5173", "http://localhost:3000"],
+		credentials: true,
+		allowHeaders: ["Content-Type", "Authorization"],
+		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+	}),
+);
+
+// Better-Auth route handler with logging
+app.on(["POST", "GET"], "/api/auth/**", async (c) => {
+	const request = c.req.raw;
+	const url = new URL(request.url);
+	const method = request.method;
+	const path = url.pathname;
+	const userAgent = request.headers.get("user-agent");
+	const origin = request.headers.get("origin");
+
+	// Log incoming request
+	consola.info(`🔐 Auth Request: ${method} ${path}`);
+	consola.debug(`📍 Origin: ${origin || "unknown"}`);
+	consola.debug(
+		`🌐 User-Agent: ${userAgent?.substring(0, 50) || "unknown"}...`,
+	);
+
+	try {
+		const response = await auth.handler(request);
+		const status = response.status;
+
+		// Log response status
+		if (status >= 200 && status < 300) {
+			consola.success(`✅ Auth Response: ${method} ${path} - ${status}`);
+		} else if (status >= 400 && status < 500) {
+			consola.warn(`⚠️  Auth Response: ${method} ${path} - ${status}`);
+		} else if (status >= 500) {
+			consola.error(`❌ Auth Response: ${method} ${path} - ${status}`);
+		}
+
+		// Log specific auth actions
+		if (path.includes("/sign-up")) {
+			consola.info("👤 User registration attempt");
+		} else if (path.includes("/sign-in")) {
+			consola.info("🔑 User login attempt");
+		} else if (path.includes("/sign-out")) {
+			consola.info("👋 User logout");
+		} else if (path.includes("/session")) {
+			consola.debug("🔍 Session check");
+		}
+
+		return response;
+	} catch (error) {
+		consola.error(`💥 Auth Handler Error: ${method} ${path}`, error);
+		throw error;
+	}
+});
 
 app.get("/", (c) => {
 	return c.text("Hello Hono!");

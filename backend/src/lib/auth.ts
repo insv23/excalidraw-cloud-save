@@ -15,6 +15,9 @@ export const auth = betterAuth({
 		provider: "sqlite", // or "mysql", "pg"
 	}),
 
+	// trusted origins for CORS
+	trustedOrigins: ["http://localhost:5173", "http://localhost:3000"],
+
 	// enable email and password authentication
 	emailAndPassword: {
 		enabled: true,
