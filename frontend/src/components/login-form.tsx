@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { EmailInput } from "@/components/ui/email-input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -28,6 +29,7 @@ export function LoginForm({
 	const [email, setEmail] = useState("");
 	const [phoneNumber, setPhoneNumber] = useState("");
 	const [password, setPassword] = useState("");
+	const [rememberMe, setRememberMe] = useState(false);
 
 	// Form validation states
 	const [emailValid, setEmailValid] = useState(false);
@@ -62,6 +64,7 @@ export function LoginForm({
 					{
 						email,
 						password: password,
+						rememberMe: rememberMe,
 						callbackURL: "/", // Redirect to home after successful login
 					},
 					{
@@ -82,7 +85,7 @@ export function LoginForm({
 					{
 						phoneNumber,
 						password: password,
-						rememberMe: true,
+						rememberMe: rememberMe,
 					},
 					{
 						onRequest: () => {
@@ -182,6 +185,24 @@ export function LoginForm({
 											)}
 										</div>
 									</div>
+
+									{/* Remember Me Checkbox */}
+									<div className="flex items-center space-x-2">
+										<Checkbox
+											id="email-remember"
+											name="rememberMe"
+											checked={rememberMe}
+											onCheckedChange={(checked) =>
+												setRememberMe(checked === true)
+											}
+										/>
+										<Label
+											htmlFor="email-remember"
+											className="text-sm font-normal cursor-pointer"
+										>
+											Keep me logged in
+										</Label>
+									</div>
 								</div>
 							</TabsContent>
 
@@ -242,6 +263,24 @@ export function LoginForm({
 												</span>
 											)}
 										</div>
+									</div>
+
+									{/* Remember Me Checkbox */}
+									<div className="flex items-center space-x-2">
+										<Checkbox
+											id="phone-remember"
+											name="rememberMe"
+											checked={rememberMe}
+											onCheckedChange={(checked) =>
+												setRememberMe(checked === true)
+											}
+										/>
+										<Label
+											htmlFor="phone-remember"
+											className="text-sm font-normal cursor-pointer"
+										>
+											Keep me logged in
+										</Label>
 									</div>
 								</div>
 							</TabsContent>

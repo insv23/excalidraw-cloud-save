@@ -23,6 +23,12 @@ export const auth = betterAuth({
 		enabled: true,
 	},
 
+	// session configuration - controls remember me duration
+	session: {
+		expiresIn: 60 * 60 * 24 * 30, // 30 days for remember me (in seconds)
+		updateAge: 60 * 60 * 24 * 7, // 7 days (session expiration is updated every 1 day)
+	},
+
 	// enable plugins
 	plugins: [
 		admin(),
