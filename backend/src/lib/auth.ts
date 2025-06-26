@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import consola from "consola";
+import { consola } from "consola";
 import {
 	admin,
 	apiKey,

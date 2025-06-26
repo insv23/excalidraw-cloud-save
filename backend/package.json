@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=development tsx watch --clear-screen=false src/index.ts",
-    "build": "tsc",
+    "build": "tsup src/index.ts",
     "start": "NODE_ENV=production node dist/index.js",
     "auth:generate": "npx @better-auth/cli generate --output ./src/db/auth.schema.ts",
     "db:push": "NODE_ENV=development npx drizzle-kit push",
@@ -19,14 +19,23 @@
     "better-auth": "^1.2.10",
     "consola": "^3.4.2",
     "dotenv": "^16.5.0",
+    "drizzle-kit": "^0.31.2",
     "drizzle-orm": "^0.44.2",
     "hono": "^4.8.3",
     "zod": "^3.25.67"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
-    "drizzle-kit": "^0.31.2",
+    "tsup": "^8.5.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
+  },
+  "tsup": {
+    "entry": ["src/index.ts"],
+    "format": ["esm"],
+    "target": "node18",
+    "outDir": "dist",
+    "sourcemap": true,
+    "clean": true
   }
 }

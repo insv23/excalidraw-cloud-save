@@ -1,0 +1,7 @@
+bass.local {
+	reverse_proxy localhost:4173
+}
+
+bassapi.local {
+	reverse_proxy localhost:3001
+}

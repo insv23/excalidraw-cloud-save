@@ -33,7 +33,7 @@ export const env = createEnv({
 	 *
 	 * This means that if you have an empty string for a value that is supposed
 	 * to be a number (e.g. `VITE_PORT=` in a ".env" file), Zod will incorrectly flag
-	 * it as a type mismatch violation. Additionally, if you have an empty string
+	 * it as a type-mismatch violation. Additionally, if you have an empty string
 	 * for a value that is supposed to be a string with a default value (e.g.
 	 * `VITE_API_URL=` in an ".env" file), the default value will never be applied.
 	 *
