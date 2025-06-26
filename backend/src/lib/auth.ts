@@ -9,6 +9,7 @@ import {
 	phoneNumber,
 } from "better-auth/plugins";
 import { db } from "@/db";
+import { env } from "./env";
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
@@ -16,7 +17,7 @@ export const auth = betterAuth({
 	}),
 
 	// trusted origins for CORS
-	trustedOrigins: ["http://localhost:5173", "http://localhost:3000"],
+	trustedOrigins: [env.CORS_ALLOWED_ORIGINS],
 
 	// enable email and password authentication
 	emailAndPassword: {

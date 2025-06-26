@@ -29,7 +29,7 @@ app.use("*", async (c, next) => {
 app.use(
 	"/api/auth/**",
 	cors({
-		origin: ["http://localhost:5173", "http://localhost:3000"],
+		origin: [env.CORS_ALLOWED_ORIGINS],
 		credentials: true,
 		allowHeaders: ["Content-Type", "Authorization"],
 		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

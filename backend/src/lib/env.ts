@@ -22,6 +22,16 @@ export const env = createEnv({
 
 		// Server port
 		PORT: z.coerce.number().positive().default(3000),
+
+		// Better Auth trusted origins
+		// backend/src/lib/auth.ts: trustedOrigins
+		BETTER_AUTH_TRUSTED_ORIGINS: z.string().default("http://localhost:5173"),
+
+		// CORS allowed origins
+		// backend/src/index.ts: cors({
+		// 		origin: ...
+		// 	}),
+		CORS_ALLOWED_ORIGINS: z.string().default("http://localhost:5173"),
 	},
 
 	/**
