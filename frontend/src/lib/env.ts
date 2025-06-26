@@ -15,10 +15,8 @@ export const env = createEnv({
 			.url("VITE_API_BASE_URL must be a valid URL")
 			.default("http://localhost:3000"),
 
-		// App environment
-		VITE_APP_ENV: z
-			.enum(["development", "production", "test"])
-			.default("development"),
+		// Preview allowed hosts (comma-separated)
+		VITE_PREVIEW_ALLOWED_HOSTS: z.string().default("localhost"),
 	},
 
 	/**

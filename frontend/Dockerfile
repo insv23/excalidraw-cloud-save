@@ -7,17 +7,16 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# 复制源代码并构建
+# 复制源代码
 COPY . .
 
-# 构建参数
+# 构建参数 - 只包含构建时需要的变量
 ARG VITE_API_BASE_URL
-ARG VITE_APP_ENV=production
 
+# 设置环境变量供构建使用
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-ENV VITE_APP_ENV=$VITE_APP_ENV
 
-# 构建应用
+# 构建应用（会读取上面的环境变量）
 RUN npm run build
 
 # 暴露端口
@@ -27,5 +26,5 @@ EXPOSE 4173
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:4173/ || exit 1
 
-# 使用 vite preview 启动，指定端口和host
+# 使用 vite preview 启动（也会读取 VITE_PREVIEW_ALLOWED_HOSTS）
 CMD ["npm", "run", "preview", "--", "--port", "4173", "--host"]
