@@ -40,6 +40,9 @@ COPY --chown=backend:nodejs drizzle.config.ts ./
 # Copy complete source structure needed for migration
 COPY --from=builder --chown=backend:nodejs /app/src ./src
 
+# Copy existing migration files to make migrations idempotent
+COPY --from=builder --chown=backend:nodejs /app/drizzle ./drizzle
+
 # Create data directory for SQLite database and ensure proper ownership
 RUN mkdir -p /app/data && chown -R backend:nodejs /app
 
@@ -56,5 +59,5 @@ ENV NODE_ENV=production
 HEALTHCHECK --interval=30s --timeout=10s --start-period=45s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
-# Start command: generate migrations, run migration, then start server
+# Default command runs migrations then the application
 CMD ["sh", "-c", "npm run db:generate:prod && npm run db:migrate:prod && npm start"]
