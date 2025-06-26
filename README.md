@@ -120,8 +120,38 @@ npm run dev
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3000
 
-## 📦 Development(TODO)
+## 📦 Docker Production Deploy
 
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd better-auth-shadcn-sidebar
+```
+
+### 2. Setup Environment Variables
+
+```bash
+cp .env.production.example .env.production
+```
+
+Edit the `.env.production` file and adjust all variable values according to your actual deployment requirements.
+
+### 3. Start the Application
+
+```bash
+docker compose --env-file .env.production up -d
+```
+
+### 4. Rebuild from Scratch (if needed)
+
+```bash
+docker compose down -v && \
+docker compose --env-file .env.production up -d --build --force-recreate
+```
+
+- First command removes containers and volumes completely
+- Second command rebuilds everything from scratch without using cache
 
 
 ## 📱 Authentication Features
