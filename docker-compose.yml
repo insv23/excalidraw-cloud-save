@@ -17,7 +17,7 @@ services:
     ports:
       - "${BACKEND_HOST_PORT:-3001}:3000"
     volumes:
-      - backend-data:/app/data
+      - ./data:/app/data
     networks:
       - app-network
     healthcheck:
@@ -57,14 +57,6 @@ services:
     labels:
       - "app.name=better-auth-frontend"
       - "app.version=1.0.0"
-
-# Persistent volumes
-volumes:
-  backend-data:
-    driver: local
-    labels:
-      - "app.name=better-auth"
-      - "app.component=database"
 
 # Networks
 networks:

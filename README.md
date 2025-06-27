@@ -140,6 +140,7 @@ Edit the `.env.production` file and adjust all variable values according to your
 ### 3. Start the Application
 
 ```bash
+mkdir data
 docker compose --env-file .env.production up -d
 ```
 
