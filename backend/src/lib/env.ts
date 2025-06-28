@@ -2,9 +2,12 @@ import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 import { config } from "dotenv";
 
-// Load environment-specific .env file
+// Load environment-specific .env file only in development
+// Production environment relies on Docker-passed environment variables
 const nodeEnv = process.env.NODE_ENV || "development";
-config({ path: `.env.${nodeEnv}` });
+if (nodeEnv === "development") {
+	config({ path: `.env.${nodeEnv}` });
+}
 
 export const env = createEnv({
 	server: {
@@ -32,6 +35,14 @@ export const env = createEnv({
 		// 		origin: ...
 		// 	}),
 		CORS_ALLOWED_ORIGINS: z.string().default("http://localhost:5173"),
+
+		// Email registration control
+		// Controls whether new user email registration is allowed
+		// Set to "true" to disable email registration, "false" or empty to allow email registration
+		DISABLE_EMAIL_REGISTRATION: z
+			.string()
+			.transform((val) => val === "true")
+			.default("false"),
 	},
 
 	/**

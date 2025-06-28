@@ -22,6 +22,7 @@ export const auth = betterAuth({
 	// enable email and password authentication
 	emailAndPassword: {
 		enabled: true,
+		disableSignUp: env.DISABLE_EMAIL_REGISTRATION, // Control email registration via environment variable
 	},
 
 	// session configuration - controls remember me duration
