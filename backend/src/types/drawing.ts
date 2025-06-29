@@ -58,6 +58,7 @@ export const EMPTY_DRAWING_CONTENT = {
 		currentItemTextAlign: "left",
 		gridSize: null,
 		colorPalette: {},
+		collaborators: [],
 	},
 	files: {},
 } as const;
