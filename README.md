@@ -2,7 +2,13 @@
 
 Self-hosted Excalidraw with files saved to your own server for better management
 
-A full-featured self-hosted Excalidraw cloud save application with Better Auth authentication, SQLite database storage, and modern sidebar interface. Users can create, edit, save, and share drawings with all data stored on your own server.
+<img width="1551" alt="image" src="https://github.com/user-attachments/assets/395d66f8-b88b-47d8-880b-c48f8e3f3a94" />
+
+A full-featured self-hosted Excalidraw cloud save application with 
+- Better Auth authentication,
+- SQLite database storage, and
+- modern sidebar interface.
+- Users can create, edit, save, and share drawings with all data stored on your own server.
 
 ## ✨ Core Features
 
