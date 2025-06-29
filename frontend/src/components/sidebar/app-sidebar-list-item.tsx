@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState } from "react";
 import {
 	MoreHorizontal,
 	Archive,
@@ -20,6 +21,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DescriptionDialog } from "@/components/description-dialog";
+import { useDrawingsStore } from "@/store/drawings-store";
 
 interface DrawingListItemProps {
 	drawing: Drawing;
@@ -50,12 +53,19 @@ export function DrawingListItem({
 	onDelete,
 	onPermanentDelete,
 }: DrawingListItemProps) {
+	const [descriptionDialogOpen, setDescriptionDialogOpen] = useState(false);
+	const updateDrawing = useDrawingsStore((state) => state.updateDrawing);
+
 	const formatLastModified = (dateString: string) => {
 		try {
 			return formatDistanceToNow(new Date(dateString), { addSuffix: true });
 		} catch {
 			return "Unknown";
 		}
+	};
+
+	const handleDescriptionSave = (newDescription: string) => {
+		updateDrawing(drawing.id, { description: newDescription });
 	};
 
 	return (
@@ -78,11 +88,21 @@ export function DrawingListItem({
 						{formatLastModified(drawing.updatedAt)}
 					</span>
 				</div>
-				{drawing.description && (
-					<span className="line-clamp-2 w-full text-xs text-muted-foreground">
-						{drawing.description}
-					</span>
-				)}
+				<div
+					className="w-full text-xs text-muted-foreground cursor-pointer"
+					onDoubleClick={(e) => {
+						e.stopPropagation();
+						setDescriptionDialogOpen(true);
+					}}
+				>
+					{drawing.description ? (
+						<span className="line-clamp-3">{drawing.description}</span>
+					) : (
+						<span className="italic text-muted-foreground/60">
+							Double-click to create or edit description
+						</span>
+					)}
+				</div>
 			</button>
 
 			{/* Container for the frosted glass effect */}
@@ -175,6 +195,14 @@ export function DrawingListItem({
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>
+
+			<DescriptionDialog
+				open={descriptionDialogOpen}
+				onOpenChange={setDescriptionDialogOpen}
+				title={drawing.title}
+				value={drawing.description}
+				onSave={handleDescriptionSave}
+			/>
 		</div>
 	);
 }
