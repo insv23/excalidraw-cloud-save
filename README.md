@@ -327,6 +327,11 @@ Note: Due to Excalidraw limitations, mobile drawing experience may not be as smo
 - **Auto-save**: Debounced delayed save, reducing server requests
 - **Optimistic Updates**: Immediate UI feedback, background sync
 
+## 📋 Todo
+
+- **Refactor Frontend Architecture** - Current implementation uses quick patches and needs proper architectural refactoring for maintainability and scalability
+- **Image Support in Excalidraw Canvas** - Implement persistent image storage and retrieval to ensure images don't get lost when drawings are saved/loaded
+
 ## 🤝 Contributing
 
 1. Fork this project
