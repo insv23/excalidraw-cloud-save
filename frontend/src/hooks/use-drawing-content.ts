@@ -21,9 +21,10 @@ export function useDrawingContent(
 	options?: {
 		autoSave?: boolean;
 		autoSaveDelay?: number;
+		drawingUpdatedAt?: string;
 	},
 ): UseDrawingContentResult {
-	const { autoSave = true, autoSaveDelay = 500 } = options || {};
+	const { autoSave = true, autoSaveDelay = 500, drawingUpdatedAt } = options || {};
 
 	const [content, setContent] = useState<DrawingContent | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
@@ -158,6 +159,13 @@ export function useDrawingContent(
 		// Fetch new content
 		fetchContent();
 	}, [drawingId, fetchContent]);
+
+	// Update lastSavedAt when drawing metadata is updated externally
+	useEffect(() => {
+		if (drawingUpdatedAt && lastSavedAt.current && drawingUpdatedAt > lastSavedAt.current) {
+			lastSavedAt.current = drawingUpdatedAt;
+		}
+	}, [drawingUpdatedAt]);
 
 	// Clean up debounced function on unmount
 	useEffect(() => {

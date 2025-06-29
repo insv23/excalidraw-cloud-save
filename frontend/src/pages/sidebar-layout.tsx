@@ -4,6 +4,7 @@ import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { LoginPromptSidebar } from "@/components/sidebar/app-sidebar-login-prompt";
 import { EmptyState } from "@/components/sidebar-inset/empty-state";
 import { ExcalidrawCanvas } from "@/components/sidebar-inset/excalidraw-canvas";
+import { EditableTitle } from "@/components/editable-title";
 import { useSession } from "@/lib/auth-client";
 import {
 	SidebarInset,
@@ -26,6 +27,7 @@ export default function SidebarLayout() {
 		useState<DrawingCategory>("recent");
 	const createNewDrawing = useDrawingsStore((state) => state.createNewDrawing);
 	const isCreating = useDrawingsStore((state) => state.isCreating);
+	const updateDrawing = useDrawingsStore((state) => state.updateDrawing);
 
 	// Fetch drawings when user is logged in
 	const { isLoading: isLoadingDrawings } = useDrawings(
@@ -152,9 +154,18 @@ export default function SidebarLayout() {
 							orientation="vertical"
 							className="mr-2 data-[orientation=vertical]:h-4"
 						/>
-						<div className="text-sm font-medium text-muted-foreground">
-							{getCurrentDrawingName()}
-						</div>
+						{drawingId && currentDrawing ? (
+							<EditableTitle
+								value={currentDrawing.title}
+								onSave={(newTitle) => updateDrawing(drawingId, { title: newTitle })}
+								className="text-sm font-medium text-muted-foreground"
+								placeholder="Untitled Drawing"
+							/>
+						) : (
+							<div className="text-sm font-medium text-muted-foreground">
+								{getCurrentDrawingName()}
+							</div>
+						)}
 					</header>
 				)}
 

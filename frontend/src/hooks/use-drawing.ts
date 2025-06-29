@@ -18,6 +18,10 @@ interface UseDrawingResult {
 export function useDrawing(drawingId: string | undefined): UseDrawingResult {
 	const getDrawingById = useDrawingsStore((state) => state.getDrawingById);
 	const updateDrawing = useDrawingsStore((state) => state.updateDrawing);
+	// Subscribe to the specific drawing in the store
+	const storeDrawing = useDrawingsStore((state) => 
+		drawingId ? state.getDrawingById(drawingId) : null
+	);
 	
 	const [drawing, setDrawing] = useState<Drawing | null>(null);
 	const [access, setAccess] = useState<AccessResult | null>(null);
@@ -33,9 +37,8 @@ export function useDrawing(drawingId: string | undefined): UseDrawingResult {
 		}
 
 		// First check if drawing exists in store
-		const existingDrawing = getDrawingById(drawingId);
-		if (existingDrawing) {
-			setDrawing(existingDrawing);
+		if (storeDrawing) {
+			setDrawing(storeDrawing);
 			setAccess("ALLOWED"); // If it's in the store, user has access
 			setIsLoading(false);
 			return;
@@ -104,7 +107,7 @@ export function useDrawing(drawingId: string | undefined): UseDrawingResult {
 		return () => {
 			cancelled = true;
 		};
-	}, [drawingId, getDrawingById, updateDrawing]);
+	}, [drawingId, storeDrawing, updateDrawing]);
 
 	return { drawing, access, isLoading, error };
 }

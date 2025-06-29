@@ -73,8 +73,8 @@ export function DrawingListItem({
 				className="flex flex-1 flex-col items-start gap-2 text-left"
 			>
 				<div className="flex w-full items-center gap-2">
-					<span className="font-medium">{drawing.title}</span>
-					<span className="ml-auto text-xs text-muted-foreground">
+					<span className="font-medium line-clamp-2">{drawing.title}</span>
+					<span className="ml-auto text-xs text-muted-foreground whitespace-nowrap">
 						{formatLastModified(drawing.updatedAt)}
 					</span>
 				</div>

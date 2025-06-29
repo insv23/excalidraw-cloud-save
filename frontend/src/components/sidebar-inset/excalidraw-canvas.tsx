@@ -2,6 +2,7 @@ import { Excalidraw } from "@excalidraw/excalidraw";
 import { memo, useCallback, useEffect, useState } from "react";
 import "@excalidraw/excalidraw/index.css";
 import { useDrawingContent } from "@/hooks/use-drawing-content";
+import { useDrawing } from "@/hooks/use-drawing";
 import { useTheme } from "@/components/theme/theme-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -13,9 +14,11 @@ export const ExcalidrawCanvas = memo(function ExcalidrawCanvas({
 	drawingId,
 }: ExcalidrawCanvasProps) {
 	const { theme } = useTheme();
+	const { drawing } = useDrawing(drawingId);
 	const { content, isLoading, isSaving, saveContent } = useDrawingContent(drawingId, {
 		autoSave: true,
 		autoSaveDelay: 2000, // 2 seconds
+		drawingUpdatedAt: drawing?.updatedAt,
 	});
 
 	// Track if we've loaded initial content
