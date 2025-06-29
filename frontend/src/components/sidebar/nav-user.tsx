@@ -10,10 +10,12 @@ import {
 	Monitor,
 	Moon,
 	Sun,
+	User,
+	LogIn,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { signOut } from "@/lib/auth-client";
+import { signOut, useSession } from "@/lib/auth-client";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -32,7 +34,8 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/theme/theme-provider";
+import { useNavigate } from "react-router-dom";
 import consola from "consola";
 
 // Check if email is a phone number virtual email and format it
@@ -50,17 +53,11 @@ const formatDisplayEmail = (email: string): string => {
 	return email;
 };
 
-export function NavUser({
-	user,
-}: {
-	user: {
-		name: string;
-		email: string;
-		avatar?: string | null;
-	};
-}) {
+export function NavUser() {
+	const { data: session } = useSession();
 	const { isMobile } = useSidebar();
 	const { theme, setTheme } = useTheme();
+	const navigate = useNavigate();
 
 	// Generate fallback text from name
 	const generateFallback = (name: string): string => {
@@ -75,9 +72,6 @@ export function NavUser({
 		// Single word: take first 2 characters
 		return name.slice(0, 2);
 	};
-
-	const avatarFallback = generateFallback(user.name);
-	const displayEmail = formatDisplayEmail(user.email);
 
 	const handleSignOut = async () => {
 		try {
@@ -94,6 +88,110 @@ export function NavUser({
 		}
 	};
 
+	const handleLogin = () => {
+		navigate("/login");
+	};
+
+	const handleRegister = () => {
+		navigate("/register");
+	};
+
+	// Anonymous user state
+	if (!session?.user) {
+		return (
+			<SidebarMenu>
+				<SidebarMenuItem>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<SidebarMenuButton
+								size="lg"
+								className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:h-8 md:p-0"
+							>
+								<Avatar className="h-8 w-8 rounded-lg border border-gray-200">
+									<AvatarFallback className="rounded-lg bg-muted">
+										<User className="h-4 w-4 text-muted-foreground" />
+									</AvatarFallback>
+								</Avatar>
+								<div className="grid flex-1 text-left text-sm leading-tight">
+									<span className="truncate font-medium text-muted-foreground">
+										Anonymous
+									</span>
+									<span className="truncate text-xs text-muted-foreground">
+										Click to sign in
+									</span>
+								</div>
+								<ChevronsUpDown className="ml-auto size-4" />
+							</SidebarMenuButton>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent
+							className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+							side={isMobile ? "bottom" : "right"}
+							align="end"
+							sideOffset={4}
+						>
+							<DropdownMenuLabel className="p-0 font-normal">
+								<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+									<Avatar className="h-8 w-8 rounded-lg">
+										<AvatarFallback className="rounded-lg bg-muted">
+											<User className="h-4 w-4 text-muted-foreground" />
+										</AvatarFallback>
+									</Avatar>
+									<div className="grid flex-1 text-left text-sm leading-tight">
+										<span className="truncate font-medium text-muted-foreground">
+											Anonymous User
+										</span>
+										<span className="truncate text-xs text-muted-foreground">
+											Not signed in
+										</span>
+									</div>
+								</div>
+							</DropdownMenuLabel>
+							<DropdownMenuSeparator />
+							<DropdownMenuGroup>
+								<DropdownMenuItem onClick={handleLogin}>
+									<LogIn />
+									Sign In
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={handleRegister}>
+									<User />
+									Create Account
+								</DropdownMenuItem>
+							</DropdownMenuGroup>
+							<DropdownMenuSeparator />
+							<DropdownMenuSub>
+								<DropdownMenuSubTrigger>
+									{theme === "light" && <Sun className="mr-2 h-4 w-4" />}
+									{theme === "dark" && <Moon className="mr-2 h-4 w-4" />}
+									{theme === "system" && <Monitor className="mr-2 h-4 w-4" />}
+									Theme
+								</DropdownMenuSubTrigger>
+								<DropdownMenuSubContent>
+									<DropdownMenuItem onClick={() => setTheme("light")}>
+										<Sun className="mr-2 h-4 w-4" />
+										Light
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => setTheme("dark")}>
+										<Moon className="mr-2 h-4 w-4" />
+										Dark
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => setTheme("system")}>
+										<Monitor className="mr-2 h-4 w-4" />
+										System
+									</DropdownMenuItem>
+								</DropdownMenuSubContent>
+							</DropdownMenuSub>
+						</DropdownMenuContent>
+					</DropdownMenu>
+				</SidebarMenuItem>
+			</SidebarMenu>
+		);
+	}
+
+	// Authenticated user state
+	const user = session.user;
+	const avatarFallback = generateFallback(user.name);
+	const displayEmail = formatDisplayEmail(user.email);
+
 	return (
 		<SidebarMenu>
 			<SidebarMenuItem>
@@ -104,9 +202,7 @@ export function NavUser({
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:h-8 md:p-0"
 						>
 							<Avatar className="h-8 w-8 rounded-lg border border-gray-200">
-								{user.avatar && (
-									<AvatarImage src={user.avatar} alt={user.name} />
-								)}
+								{user.image && <AvatarImage src={user.image} alt={user.name} />}
 								<AvatarFallback className="rounded-lg">
 									{avatarFallback}
 								</AvatarFallback>
@@ -127,8 +223,8 @@ export function NavUser({
 						<DropdownMenuLabel className="p-0 font-normal">
 							<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
 								<Avatar className="h-8 w-8 rounded-lg">
-									{user.avatar && (
-										<AvatarImage src={user.avatar} alt={user.name} />
+									{user.image && (
+										<AvatarImage src={user.image} alt={user.name} />
 									)}
 									<AvatarFallback className="rounded-lg">
 										{avatarFallback}

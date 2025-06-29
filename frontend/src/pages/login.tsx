@@ -1,5 +1,5 @@
-import { LoginForm } from "@/components/login-form";
-import { ModeToggle } from "@/components/mode-toggle";
+import { LoginForm } from "@/components/auth/login-form";
+import { ModeToggle } from "@/components/theme/mode-toggle";
 
 export default function LoginPage() {
 	return (
