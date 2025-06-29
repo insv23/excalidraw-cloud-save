@@ -9,7 +9,7 @@ import {
 	buildDrawingCategoryFilter,
 	formatDrawingResponse,
 	checkDrawingExists,
-	createInitialDrawingContent,
+	createDrawingWithContent,
 } from "@/lib/drawings";
 import {
 	CreateDrawingSchema,
@@ -114,29 +114,19 @@ app.post("/:id", requireAuth, async (c) => {
 
 		const { title, description, content } = parseResult.data;
 
-		// Create drawing and initial content in transaction
-		const result = await db.transaction(async (tx) => {
-			// Create drawing metadata
-			const [drawing] = await tx
-				.insert(drawings)
-				.values({
-					id: drawingId,
-					ownerId: user.id,
-					title,
-					description: description || null,
-				})
-				.returning();
-
-			// Create initial content
-			await createInitialDrawingContent(drawingId, content);
-
-			return drawing;
+		// Create drawing and initial content in a transaction
+		const drawing = await createDrawingWithContent({
+			id: drawingId,
+			ownerId: user.id,
+			title,
+			description,
+			content,
 		});
 
 		return c.json(
 			{
 				success: true,
-				drawing: formatDrawingResponse(result),
+				drawing: formatDrawingResponse(drawing),
 			},
 			201,
 		);

@@ -156,7 +156,50 @@ export async function getDrawingContent(
 	};
 }
 
-// Create initial drawing content
+// Create drawing with content in a transaction
+export async function createDrawingWithContent(params: {
+	id: string;
+	ownerId: string;
+	title?: string;
+	description?: string | null;
+	content?: {
+		elements?: ExcalidrawElement[];
+		appState?: ExcalidrawAppState;
+		files?: ExcalidrawFiles;
+	};
+}): Promise<Drawing> {
+	return db.transaction(async (tx) => {
+		// Create drawing metadata
+		const [drawing] = await tx
+			.insert(drawings)
+			.values({
+				id: params.id,
+				ownerId: params.ownerId,
+				title: params.title || "Untitled Drawing",
+				description: params.description || null,
+			})
+			.returning();
+
+		// Prepare content data with defaults
+		const contentData = {
+			elements: params.content?.elements || EMPTY_DRAWING_CONTENT.elements,
+			appState: params.content?.appState || EMPTY_DRAWING_CONTENT.appState,
+			files: params.content?.files || EMPTY_DRAWING_CONTENT.files,
+		};
+
+		// Create drawing content
+		await tx.insert(drawingContents).values({
+			drawingId: params.id,
+			elements: contentData.elements,
+			appState: contentData.appState,
+			files: contentData.files,
+		});
+
+		return drawing;
+	});
+}
+
+// Create initial drawing content (kept for backward compatibility if needed elsewhere)
 export async function createInitialDrawingContent(
 	drawingId: string,
 	content?: {
@@ -164,6 +207,7 @@ export async function createInitialDrawingContent(
 		appState?: ExcalidrawAppState;
 		files?: ExcalidrawFiles;
 	},
+	tx: typeof db = db,
 ) {
 	const contentData = {
 		elements: content?.elements || EMPTY_DRAWING_CONTENT.elements,
@@ -171,7 +215,7 @@ export async function createInitialDrawingContent(
 		files: content?.files || EMPTY_DRAWING_CONTENT.files,
 	};
 
-	await db.insert(drawingContents).values({
+	await tx.insert(drawingContents).values({
 		drawingId,
 		elements: contentData.elements,
 		appState: contentData.appState,
