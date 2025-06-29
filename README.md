@@ -1,95 +1,130 @@
-# Better Auth + shadcn Sidebar
+# Excalidraw Cloud Save
 
-A modern full-stack authentication application built with Better Auth and shadcn/ui components, featuring a clean sidebar interface and comprehensive user authentication flow.
+Self-hosted Excalidraw with files saved to your own server for better management
 
-## 🚀 Features
+A full-featured self-hosted Excalidraw cloud save application with Better Auth authentication, SQLite database storage, and modern sidebar interface. Users can create, edit, save, and share drawings with all data stored on your own server.
 
-- **Complete Authentication System** - Email/password and phone number authentication
-- **Modern UI Components** - Built with shadcn/ui and Tailwind CSS
-- **Responsive Sidebar Layout** - Collapsible sidebar with mobile support
-- **Remember Me Functionality** - Persistent login sessions
-- **Phone Number Verification** - OTP-based phone authentication
-- **Real-time Validation** - Form validation with instant feedback
-- **Dark Mode Support** - Light/Dark/System theme switching
-- **Type Safety** - Full TypeScript support throughout the stack
+## ✨ Core Features
 
-## 🏗️ Architecture
+### 🎨 Excalidraw Integration
+- **Complete Excalidraw Functionality** - Supports all native drawing tools and gestures
+- **Real-time Auto-save** - 2-second delay auto-save to prevent data loss
+- **Manual Save Support** - Ctrl/Cmd+S keyboard shortcut for manual save
+- **Theme Synchronization** - Light/dark theme support with system settings sync
+- **Conflict Detection** - Multi-session editing conflict detection and alerts
 
-This project consists of two main parts:
+### 🔐 Complete Authentication System
+- **Email/Password Authentication** - Email registration and login support
+- **Phone Verification** - OTP verification code login support
+- **Remember Me Functionality** - Persistent login sessions (configurable 30 days)
+- **Session Management** - Secure token storage and cross-tab synchronization
+
+### 📁 Drawing Management Features
+- **Category Management** - Recent, pinned, public, archived, trash categories
+- **Search Functionality** - Quick search drawings by title
+- **Permission Control** - Private/public drawing access permission management
+- **Soft Delete** - Trash recovery functionality
+- **Batch Operations** - Pin, archive, delete and other batch operations
+
+### 🎯 Modern Interface
+- **Unified Sidebar Layout** - Drawing list and canvas in the same interface
+- **Responsive Design** - Mobile-friendly interface adaptation
+- **Editable Title and Description** - Click to edit drawing metadata directly
+- **Save Status Indicator** - Real-time display of save status and unsaved changes
+- **shadcn/ui Components** - Modern UI component library
+
+## 🏗️ Technical Architecture
 
 ### Backend (`/backend`)
 
 **Tech Stack:**
-- **Runtime**: Node.js with npm
+- **Runtime**: Node.js 18+ 
 - **Framework**: Hono (lightweight web framework)
 - **Authentication**: Better Auth (modern auth library)
 - **Database**: Drizzle ORM + SQLite
 - **Logging**: Consola (beautiful console logger)
+- **Build**: tsup (ESM format build)
 
-**Key Features:**
-- RESTful API endpoints for authentication
-- Session management with configurable expiration
-- Phone number OTP verification
-- Database schema management with Drizzle
-- Request/response logging and monitoring
+**Core Features:**
+- RESTful API design with complete CRUD operations
+- Role-based access control system
+- Separate storage for drawing metadata and content
+- Optimistic locking to prevent edit conflicts
+- Automatic database migration and schema management
 
 ### Frontend (`/frontend`)
 
 **Tech Stack:**
-- **Build Tool**: Vite
-- **Framework**: React 19+
-- **Routing**: React Router
+- **Build Tool**: Vite 6.x
+- **Framework**: React 19+ with TypeScript
+- **Routing**: React Router 7.x
 - **UI Components**: shadcn/ui + Radix UI
-- **Styling**: Tailwind CSS
-- **Package Manager**: npm
+- **Styling**: Tailwind CSS 4.x
+- **State Management**: Zustand + React Hooks
+- **Drawing Engine**: @excalidraw/excalidraw
 
-**Key Features:**
-- Responsive sidebar layout with collapsible navigation
-- Email and phone number authentication forms
-- Real-time form validation and password strength checking
-- Toast notifications for user feedback
-- Mobile-optimized interface
-- Dark/light/system theme support with persistent preferences
+**Core Features:**
+- Single-page application architecture with unified sidebar layout
+- Performance-optimized component rendering (React.memo)
+- Client-side data filtering and categorization
+- Responsive interface design
+- Dark/light theme support
 
 ## 📁 Project Structure
 
 ```
-better-auth-shadcn-sidebar/
-├── backend/                 # Backend API server
+excalidraw-cloud-save/
+├── backend/                    # Backend API service
 │   ├── src/
-│   │   ├── db/             # Database schema and connection
-│   │   ├── lib/            # Authentication config and utilities
-│   │   └── index.ts        # Server entry point
-│   ├── drizzle.config.ts   # Database configuration
+│   │   ├── db/                # Database schema and connections
+│   │   │   ├── auth.schema.ts # Better Auth tables
+│   │   │   ├── drawing.schema.ts # Drawing tables
+│   │   │   └── index.ts       # Database connection config
+│   │   ├── lib/               # Utilities and middleware
+│   │   │   ├── auth.ts        # Better Auth configuration
+│   │   │   ├── drawings.ts    # Drawing business logic
+│   │   │   └── env.ts         # Environment variable validation
+│   │   ├── routes/            # API route definitions
+│   │   │   ├── drawings.ts    # Drawing metadata API
+│   │   │   └── drawing-content.ts # Drawing content API
+│   │   ├── types/             # TypeScript type definitions
+│   │   └── index.ts           # Server entry point
+│   ├── drizzle/               # Database migration files
+│   ├── drizzle.config.ts      # Database configuration
 │   └── package.json
 │
-├── frontend/               # React frontend application
+├── frontend/                   # React frontend application
 │   ├── src/
-│   │   ├── components/     # React components
-│   │   │   ├── ui/        # shadcn/ui components
-│   │   │   ├── login-form.tsx
-│   │   │   ├── register-form.tsx
-│   │   │   └── app-sidebar.tsx
-│   │   ├── pages/         # Route components
-│   │   ├── lib/           # Utilities and configurations
-│   │   └── hooks/         # Custom React hooks
+│   │   ├── components/        # React components
+│   │   │   ├── ui/           # shadcn/ui base components
+│   │   │   ├── auth/         # Authentication components
+│   │   │   ├── sidebar/      # Sidebar components
+│   │   │   └── sidebar-inset/ # Main content area components
+│   │   ├── pages/            # Page route components
+│   │   ├── hooks/            # Custom React hooks
+│   │   ├── lib/              # Utility functions and configs
+│   │   ├── store/            # Zustand state management
+│   │   └── types/            # TypeScript type definitions
 │   └── package.json
 │
-└── README.md              # This file
+├── docker-compose.yml          # Docker deployment config
+├── CLAUDE.md                   # AI assistant project guide
+└── README.md                   # Project documentation
 ```
 
-## 🛠️ Development
+## 🚀 Development Guide
 
 ### Prerequisites
 
 - Node.js (v18 or higher)
-- npm
+- npm package manager
+- SQLite (automatically created in development)
 
-### 1. Clone the Repository
+### 1. Clone Project
 
 ```bash
 git clone <repository-url>
-cd better-auth-shadcn-sidebar
+cd excalidraw-cloud-save
 ```
 
 ### 2. Backend Setup
@@ -105,6 +140,16 @@ npm run db:push
 npm run dev
 ```
 
+**Backend Development Commands:**
+```bash
+npm run dev              # Start development server (hot reload)
+npm run build           # Build for production
+npm run start           # Start production server
+npm run db:generate     # Generate database migration files
+npm run db:migrate      # Run database migrations
+npm run auth:generate   # Generate Better Auth tables
+```
+
 ### 3. Frontend Setup
 
 ```bash
@@ -115,102 +160,174 @@ npm install
 npm run dev
 ```
 
-### 4. Access the Application
+**Frontend Development Commands:**
+```bash
+npm run dev             # Start development server
+npm run build           # Build for production (includes TypeScript compilation)
+npm run lint            # Run ESLint code checking
+npm run preview         # Preview production build
+```
 
-- **Frontend**: http://localhost:5173
+### 4. Access Application
+
+- **Frontend Interface**: http://localhost:5173
 - **Backend API**: http://localhost:3000
 
-## 📦 Docker Production Deploy
+## 🐳 Docker Production Deployment
 
-### 1. Clone the Repository
+### 1. Clone Project
 
 ```bash
 git clone <repository-url>
-cd better-auth-shadcn-sidebar
+cd excalidraw-cloud-save
 ```
 
-### 2. Setup Environment Variables
+### 2. Configure Environment Variables
 
 ```bash
 cp .env.production.example .env.production
 ```
 
-Edit the `.env.production` file and adjust all variable values according to your actual deployment requirements.
+Edit the `.env.production` file and adjust all variable values according to your actual deployment requirements:
 
-### 3. Start the Application
+```env
+# Better Auth Configuration
+BETTER_AUTH_SECRET=your-secret-key-here
+BETTER_AUTH_URL=https://yourdomain.com
+BETTER_AUTH_TRUSTED_ORIGINS=https://yourdomain.com
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS=https://yourdomain.com
+
+# Frontend API Configuration
+VITE_API_BASE_URL=https://yourdomain.com
+
+# Port Configuration
+FRONTEND_HOST_PORT=80
+BACKEND_HOST_PORT=3001
+
+# Other Configuration
+DISABLE_EMAIL_REGISTRATION=false
+VITE_PREVIEW_ALLOWED_HOSTS=yourdomain.com
+```
+
+### 3. Start Application
 
 ```bash
+# Create data directory
 mkdir data
+
+# Start services
 docker compose --env-file .env.production up -d
 ```
 
-### 4. Rebuild from Scratch (if needed)
+### 4. Complete Rebuild (if needed)
 
 ```bash
-docker compose down -v && \
+# Stop and remove all containers and volumes
+docker compose down -v
+
+# Force rebuild and start
 docker compose --env-file .env.production up -d --build --force-recreate
 ```
 
-- First command removes containers and volumes completely
-- Second command rebuilds everything from scratch without using cache
+## 🔌 API Documentation
 
+### Drawing Management API
 
-## 📱 Authentication Features
+#### `GET /api/drawings`
+Get user's drawing list with category filtering and pagination support.
 
-### Email Authentication
-- Email validation with real-time feedback
-- Password strength indicator
-- Remember me functionality
-- Forgot password support (UI ready)
+**Query Parameters:**
+- `category`: `"recent"` | `"pinned"` | `"public"` | `"archived"` | `"trash"` (default: `"recent"`)
+- `page`: Page number, minimum 1 (default: `1`)
+- `pageSize`: Items per page, 1-100 (default: `50`)
+- `search`: Title search keyword
 
-### Phone Number Authentication
-- Chinese mobile number validation
-- OTP verification with countdown timer
-- SMS integration ready (development logs to console)
-- Automatic formatting and validation
+#### `POST /api/drawings/:id`
+Create new drawing using frontend-generated UUID.
 
-### Session Management
-- Configurable session duration (30 days with remember me)
-- Automatic session refresh
-- Secure token storage
-- Cross-tab synchronization
+#### `GET /api/drawings/:id`
+Get drawing metadata with smart access control.
 
-## 🎨 UI Components
+#### `PATCH /api/drawings/:id`
+Update drawing metadata (requires ownership).
 
-The application uses a comprehensive set of shadcn/ui components:
+#### `DELETE /api/drawings/:id`
+Permanently delete drawing (requires ownership).
 
-- **Forms**: Input, Email Input, Phone Input, Password Input with strength
-- **Layout**: Sidebar, Card, Tabs, Separator
-- **Feedback**: Toast notifications, Loading states, Validation messages
-- **Interactive**: Buttons, Checkboxes, Dropdowns
-- **Navigation**: Breadcrumbs, Menu items, User avatar
+### Drawing Content API
+
+#### `GET /api/drawings/:id/content`
+Get drawing canvas data.
+
+#### `PUT /api/drawings/:id/content`
+Save/update drawing canvas data with optimistic locking support.
+
+### Authentication API
+
+- `POST /api/auth/sign-up` - User registration
+- `POST /api/auth/sign-in` - User login  
+- `POST /api/auth/sign-out` - User logout
+- `GET /api/auth/session` - Get current session
+
+For complete API documentation, please refer to the `CLAUDE.md` file.
 
 ## 🔒 Security Features
 
 - **Password Requirements**: Minimum 8 characters with strength validation
-- **Rate Limiting**: Built-in protection against brute force attacks
 - **Session Security**: Secure token generation and validation
-- **Input Validation**: Client and server-side validation
+- **Access Control**: Role-based permission management
+- **Input Validation**: Client and server-side dual validation
 - **CSRF Protection**: Built into Better Auth
-- **Secure Headers**: Configured in Hono middleware
+- **Security Headers**: Configured in Hono middleware
 
-## 🚦 API Endpoints
+## 🎨 UI Component Library
 
-### Authentication Routes
-- `POST /api/auth/sign-up` - User registration
-- `POST /api/auth/sign-in` - User login
-- `POST /api/auth/sign-out` - User logout
-- `GET /api/auth/session` - Get current session
-- `POST /api/auth/phone/send-otp` - Send phone verification
-- `POST /api/auth/phone/verify` - Verify phone number
+The application uses a complete set of shadcn/ui components:
+
+- **Form Components**: Input, email input, phone input, password strength display
+- **Layout Components**: Sidebar, cards, tabs, separators
+- **Feedback Components**: Toast notifications, loading states, validation messages
+- **Interactive Components**: Buttons, checkboxes, dropdown menus
+- **Navigation Components**: Breadcrumbs, menu items, user avatar
+
+## 🔧 Configuration and Environment Variables
+
+### Backend Environment Variables
+- `BETTER_AUTH_SECRET`: Authentication secret key
+- `BETTER_AUTH_URL`: Application URL
+- `BETTER_AUTH_TRUSTED_ORIGINS`: Trusted origins
+- `CORS_ALLOWED_ORIGINS`: CORS allowed origins
+- `DB_FILE_NAME`: SQLite database file path
+- `DISABLE_EMAIL_REGISTRATION`: Disable email registration
+
+### Frontend Environment Variables
+- `VITE_API_BASE_URL`: Backend API base URL
+
+## 📱 Device Support
+
+- **Desktop**: Full feature support, optimal user experience
+- **Mobile**: Responsive interface, auto-collapse sidebar
+- **Tablet**: Adaptive layout, touch-friendly
+
+Note: Due to Excalidraw limitations, mobile drawing experience may not be as smooth as desktop.
+
+## 🚦 Performance Optimization
+
+- **Component Lazy Loading**: React.memo and key remounting strategy
+- **Data Separation**: Metadata and content loaded separately
+- **Client-side Caching**: Zustand state management caching
+- **Auto-save**: Debounced delayed save, reducing server requests
+- **Optimistic Updates**: Immediate UI feedback, background sync
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Fork this project
+2. Create feature branch (`git checkout -b feature/amazing-feature`)  
+3. Commit changes (`git commit -m 'Add some amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
 ## 📄 License
 
@@ -218,12 +335,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
+- [Excalidraw](https://excalidraw.com) - Excellent online drawing tool
 - [Better Auth](https://better-auth.com) - Modern authentication library
-- [shadcn/ui](https://ui.shadcn.com) - Beautiful UI components
+- [shadcn/ui](https://ui.shadcn.com) - Beautiful UI component library
 - [Hono](https://hono.dev) - Lightweight web framework
 - [Drizzle ORM](https://drizzle.team) - TypeScript ORM
 - [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS framework
 
 ---
 
-**Built with ❤️ using modern web technologies** 
+**Built with ❤️ using modern web technologies**
