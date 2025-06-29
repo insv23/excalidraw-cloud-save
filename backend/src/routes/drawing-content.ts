@@ -91,15 +91,19 @@ app.put("/:id/content", requireAuth, requireDrawingOwnership, async (c) => {
 		await updateDrawingContent(drawingId, elements, appState, files);
 
 		// Get updated timestamp
-		const [updatedDrawing] = await db
+		const updatedDrawingResult = await db
 			.select({ updatedAt: drawings.updatedAt })
 			.from(drawings)
 			.where(eq(drawings.id, drawingId))
 			.limit(1);
 
+		if (!updatedDrawingResult.length) {
+			return c.json({ error: "Drawing not found after update" }, 404);
+		}
+
 		return c.json({ 
 			success: true,
-			updatedAt: updatedDrawing[0].updatedAt.toISOString(),
+			updatedAt: updatedDrawingResult[0].updatedAt.toISOString(),
 			message: "Drawing content saved successfully"
 		});
 	} catch (error) {
