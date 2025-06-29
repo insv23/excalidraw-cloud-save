@@ -90,6 +90,7 @@ export function AppSidebar({
 	const togglePin = useDrawingsStore((state) => state.togglePin);
 	const togglePublic = useDrawingsStore((state) => state.togglePublic);
 	const toggleArchive = useDrawingsStore((state) => state.toggleArchive);
+	const isCreating = useDrawingsStore((state) => state.isCreating);
 
 	const [searchQuery, setSearchQuery] = React.useState("");
 	const [openMenu, setOpenMenu] = React.useState<string | null>(null);
@@ -112,14 +113,16 @@ export function AppSidebar({
 		return filtered;
 	}, [drawings, currentCategory, searchQuery]);
 
-	const handleCreateNewDrawing = () => {
+	const handleCreateNewDrawing = async () => {
 		if (!session?.user) return;
-		const newDrawing = createNewDrawing(session.user);
-		navigate(`/${newDrawing.id}`);
+		const newDrawing = await createNewDrawing(session.user);
+		if (newDrawing) {
+			navigate(`/${newDrawing.id}`);
 
-		// Only close sidebar on mobile devices
-		if (isMobile) {
-			setOpen(false);
+			// Only close sidebar on mobile devices
+			if (isMobile) {
+				setOpen(false);
+			}
 		}
 	};
 
@@ -152,9 +155,9 @@ export function AppSidebar({
 		toggleArchive(drawing.id);
 	};
 
-	const handleDelete = (drawing: Drawing, e: React.MouseEvent) => {
+	const handleDelete = async (drawing: Drawing, e: React.MouseEvent) => {
 		e.stopPropagation();
-		deleteDrawing(drawing.id);
+		await deleteDrawing(drawing.id, false); // soft delete
 
 		// If we just deleted the currently selected drawing, navigate to home
 		if (selectedDrawingId === drawing.id) {
@@ -162,9 +165,19 @@ export function AppSidebar({
 		}
 	};
 
-	const handleRestore = (drawing: Drawing, e: React.MouseEvent) => {
+	const handleRestore = async (drawing: Drawing, e: React.MouseEvent) => {
 		e.stopPropagation();
-		restoreDrawing(drawing.id);
+		await restoreDrawing(drawing.id);
+	};
+
+	const handlePermanentDelete = async (drawing: Drawing, e: React.MouseEvent) => {
+		e.stopPropagation();
+		await deleteDrawing(drawing.id, true); // permanent delete
+
+		// If we just deleted the currently selected drawing, navigate to home
+		if (selectedDrawingId === drawing.id) {
+			navigate("/");
+		}
 	};
 
 	return (
@@ -232,9 +245,9 @@ export function AppSidebar({
 							{getCategoryDisplayName(currentCategory)}
 						</div>
 						{currentCategory !== "trash" && (
-							<Button size="sm" onClick={handleCreateNewDrawing}>
+							<Button size="sm" onClick={handleCreateNewDrawing} disabled={isCreating}>
 								<Plus className="w-4 h-4 mr-2" />
-								New
+								{isCreating ? "Creating..." : "New"}
 							</Button>
 						)}
 					</div>
@@ -267,6 +280,7 @@ export function AppSidebar({
 									onTogglePublic={handleTogglePublic}
 									onToggleArchive={handleToggleArchive}
 									onDelete={handleDelete}
+									onPermanentDelete={handlePermanentDelete}
 								/>
 							))}
 						</SidebarGroupContent>

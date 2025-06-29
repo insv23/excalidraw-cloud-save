@@ -5,6 +5,7 @@ import type { DrawingCategory } from "@/types/drawing";
 interface EmptyStateProps {
 	onCreateNew: () => void;
 	category?: DrawingCategory;
+	isCreating?: boolean;
 }
 
 const getCategoryMessage = (category: DrawingCategory = "recent") => {
@@ -48,6 +49,7 @@ const getCategoryMessage = (category: DrawingCategory = "recent") => {
 export function EmptyState({
 	onCreateNew,
 	category = "recent",
+	isCreating = false,
 }: EmptyStateProps) {
 	const message = getCategoryMessage(category);
 	const showCreateButton = category !== "trash"; // Don't show create button in trash
@@ -65,9 +67,9 @@ export function EmptyState({
 					</p>
 				</div>
 				{showCreateButton && (
-					<Button onClick={onCreateNew}>
+					<Button onClick={onCreateNew} disabled={isCreating}>
 						<Plus className="w-4 h-4 mr-2" />
-						New Drawing
+						{isCreating ? "Creating..." : "New Drawing"}
 					</Button>
 				)}
 			</div>

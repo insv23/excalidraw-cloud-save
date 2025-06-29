@@ -14,6 +14,8 @@ import { Separator } from "@/components/ui/separator";
 import type { DrawingCategory } from "@/types/drawing";
 import { validateAccess } from "@/lib/drawing-utils";
 import { useDrawingsStore } from "@/store/drawings-store";
+import { useDrawings } from "@/hooks/use-drawings";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SidebarLayout() {
 	const { id: drawingId } = useParams<{ id: string }>();
@@ -23,6 +25,12 @@ export default function SidebarLayout() {
 		useState<DrawingCategory>("recent");
 	const getDrawingById = useDrawingsStore((state) => state.getDrawingById);
 	const createNewDrawing = useDrawingsStore((state) => state.createNewDrawing);
+	const isCreating = useDrawingsStore((state) => state.isCreating);
+
+	// Fetch drawings when user is logged in
+	const { isLoading: isLoadingDrawings } = useDrawings(
+		session?.user ? { category: currentCategory } : undefined
+	);
 
 	// Memoize drawing data to avoid unnecessary lookups
 	const currentDrawing = useMemo(() => {
@@ -61,10 +69,12 @@ export default function SidebarLayout() {
 		}
 	}, [accessResult, drawingId, isPending, navigate]);
 
-	const handleCreateNew = () => {
+	const handleCreateNew = async () => {
 		if (!session?.user) return; // Should not happen if button is shown
-		const newDrawing = createNewDrawing(session.user);
-		navigate(`/${newDrawing.id}`);
+		const newDrawing = await createNewDrawing(session.user);
+		if (newDrawing) {
+			navigate(`/${newDrawing.id}`);
+		}
 	};
 
 	const isLoggedIn = session?.user;
@@ -75,7 +85,7 @@ export default function SidebarLayout() {
 			<div className="flex items-center justify-center h-screen">
 				<div className="text-center space-y-4">
 					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
-					<p className="text-muted-foreground">Loading...</p>
+					<p className="text-muted-foreground">Loading session...</p>
 				</div>
 			</div>
 		);
@@ -101,11 +111,23 @@ export default function SidebarLayout() {
 			}
 		>
 			{isLoggedIn ? (
-				<AppSidebar
-					currentCategory={currentCategory}
-					onCategoryChange={setCurrentCategory}
-					selectedDrawingId={drawingId}
-				/>
+				isLoadingDrawings ? (
+					<div className="w-[var(--sidebar-width)] border-r bg-sidebar p-4">
+						<div className="space-y-4">
+							<Skeleton className="h-10 w-full" />
+							<Skeleton className="h-8 w-full" />
+							{Array.from({ length: 5 }).map((_, i) => (
+								<Skeleton key={i} className="h-16 w-full" />
+							))}
+						</div>
+					</div>
+				) : (
+					<AppSidebar
+						currentCategory={currentCategory}
+						onCategoryChange={setCurrentCategory}
+						selectedDrawingId={drawingId}
+					/>
+				)
 			) : (
 				<LoginPromptSidebar />
 			)}
@@ -143,6 +165,7 @@ export default function SidebarLayout() {
 						<EmptyState
 							onCreateNew={handleCreateNew}
 							category={currentCategory}
+							isCreating={isCreating}
 						/>
 					)}
 				</div>

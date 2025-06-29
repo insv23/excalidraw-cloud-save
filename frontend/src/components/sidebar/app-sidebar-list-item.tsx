@@ -33,6 +33,7 @@ interface DrawingListItemProps {
 	onTogglePublic: (drawing: Drawing, e: React.MouseEvent) => void;
 	onToggleArchive: (drawing: Drawing, e: React.MouseEvent) => void;
 	onDelete: (drawing: Drawing, e: React.MouseEvent) => void;
+	onPermanentDelete?: (drawing: Drawing, e: React.MouseEvent) => void;
 }
 
 export function DrawingListItem({
@@ -47,6 +48,7 @@ export function DrawingListItem({
 	onTogglePublic,
 	onToggleArchive,
 	onDelete,
+	onPermanentDelete,
 }: DrawingListItemProps) {
 	const formatLastModified = (dateString: string) => {
 		try {
@@ -118,10 +120,21 @@ export function DrawingListItem({
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
 						{currentCategory === "trash" ? (
-							<DropdownMenuItem onClick={(e) => onRestore(drawing, e)}>
-								<ArchiveRestore className="mr-2 h-4 w-4" />
-								<span>Restore</span>
-							</DropdownMenuItem>
+							<>
+								<DropdownMenuItem onClick={(e) => onRestore(drawing, e)}>
+									<ArchiveRestore className="mr-2 h-4 w-4" />
+									<span>Restore</span>
+								</DropdownMenuItem>
+								{onPermanentDelete && (
+									<DropdownMenuItem
+										onClick={(e) => onPermanentDelete(drawing, e)}
+										className="text-destructive"
+									>
+										<Trash2 className="mr-2 h-4 w-4" />
+										<span>Delete Permanently</span>
+									</DropdownMenuItem>
+								)}
+							</>
 						) : (
 							<>
 								<DropdownMenuItem onClick={(e) => onTogglePin(drawing, e)}>
