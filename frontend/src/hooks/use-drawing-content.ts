@@ -10,7 +10,9 @@ interface UseDrawingContentResult {
 	isSaving: boolean;
 	error: string | null;
 	saveContent: (content: Omit<DrawingContent, "drawingId">) => void;
+	saveContentImmediately: (content: Omit<DrawingContent, "drawingId">) => void;
 	refetch: () => void;
+	hasUnsavedChanges: boolean;
 }
 
 /**
@@ -30,6 +32,7 @@ export function useDrawingContent(
 	const [isLoading, setIsLoading] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 	
 	// Track the last saved timestamp for optimistic locking
 	const lastSavedAt = useRef<string | null>(null);
@@ -83,11 +86,11 @@ export function useDrawingContent(
 				// Update last saved timestamp on successful save
 				lastSavedAt.current = response.updatedAt;
 				
-				// Update local content
-				setContent({
-					drawingId,
-					...contentToSave,
-				});
+				// Don't update local content to avoid triggering re-renders
+				// The content is already up-to-date since it came from the user's interaction
+				
+				// Mark as saved
+				setHasUnsavedChanges(false);
 			} catch (err) {
 				const errorMessage = err instanceof Error ? err.message : "Failed to save drawing";
 				setError(errorMessage);
@@ -136,6 +139,9 @@ export function useDrawingContent(
 	// Public save method that uses debouncing if auto-save is enabled
 	const saveContent = useCallback(
 		(contentToSave: Omit<DrawingContent, "drawingId">) => {
+			// Mark as having unsaved changes
+			setHasUnsavedChanges(true);
+			
 			if (autoSave && debouncedSave.current) {
 				debouncedSave.current(contentToSave);
 			} else {
@@ -180,6 +186,8 @@ export function useDrawingContent(
 		isSaving,
 		error,
 		saveContent,
+		saveContentImmediately,
 		refetch: fetchContent,
+		hasUnsavedChanges,
 	};
 }

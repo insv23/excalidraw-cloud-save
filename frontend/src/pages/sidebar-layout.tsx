@@ -5,6 +5,7 @@ import { LoginPromptSidebar } from "@/components/sidebar/app-sidebar-login-promp
 import { EmptyState } from "@/components/sidebar-inset/empty-state";
 import { ExcalidrawCanvas } from "@/components/sidebar-inset/excalidraw-canvas";
 import { EditableTitle } from "@/components/editable-title";
+import { SaveStatus } from "@/components/save-status";
 import { useSession } from "@/lib/auth-client";
 import {
 	SidebarInset,
@@ -28,6 +29,7 @@ export default function SidebarLayout() {
 	const createNewDrawing = useDrawingsStore((state) => state.createNewDrawing);
 	const isCreating = useDrawingsStore((state) => state.isCreating);
 	const updateDrawing = useDrawingsStore((state) => state.updateDrawing);
+	const [saveStatus, setSaveStatus] = useState<{ isSaving: boolean; hasUnsavedChanges: boolean; onSave: () => void } | null>(null);
 
 	// Fetch drawings when user is logged in
 	const { isLoading: isLoadingDrawings } = useDrawings(
@@ -154,17 +156,26 @@ export default function SidebarLayout() {
 							orientation="vertical"
 							className="mr-2 data-[orientation=vertical]:h-4"
 						/>
-						{drawingId && currentDrawing ? (
-							<EditableTitle
-								value={currentDrawing.title}
-								onSave={(newTitle) => updateDrawing(drawingId, { title: newTitle })}
-								className="text-sm font-medium text-muted-foreground"
-								placeholder="Untitled Drawing"
+						<div className="flex items-center gap-2 flex-1">
+							{drawingId && currentDrawing ? (
+								<EditableTitle
+									value={currentDrawing.title}
+									onSave={(newTitle) => updateDrawing(drawingId, { title: newTitle })}
+									className="text-sm font-medium text-muted-foreground"
+									placeholder="Untitled Drawing"
+								/>
+							) : (
+								<div className="text-sm font-medium text-muted-foreground">
+									{getCurrentDrawingName()}
+								</div>
+							)}
+						</div>
+						{drawingId && saveStatus && (
+							<SaveStatus 
+								isSaving={saveStatus.isSaving}
+								hasUnsavedChanges={saveStatus.hasUnsavedChanges}
+								onSave={saveStatus.onSave}
 							/>
-						) : (
-							<div className="text-sm font-medium text-muted-foreground">
-								{getCurrentDrawingName()}
-							</div>
 						)}
 					</header>
 				)}
@@ -183,7 +194,11 @@ export default function SidebarLayout() {
 							</div>
 						</div>
 					) : shouldShowCanvas && drawingId ? (
-						<ExcalidrawCanvas key={drawingId} drawingId={drawingId} />
+						<ExcalidrawCanvas 
+							key={drawingId} 
+							drawingId={drawingId} 
+							onSaveStatusChange={setSaveStatus}
+						/>
 					) : (
 						<EmptyState
 							onCreateNew={handleCreateNew}
