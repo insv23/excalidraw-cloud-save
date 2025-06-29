@@ -66,7 +66,7 @@ export const EMPTY_DRAWING_CONTENT = {
 // Request/Response schemas
 export const CreateDrawingSchema = z.object({
 	title: z.string().min(1).max(255).optional().default("Untitled Drawing"),
-	description: z.string().max(1000).optional(),
+	description: z.string().max(1000).nullable().optional(),
 	content: z.object({
 		elements: z.array(z.record(z.unknown())).optional().default([]),
 		appState: z.record(z.unknown()).optional().default(EMPTY_DRAWING_CONTENT.appState),
@@ -76,7 +76,7 @@ export const CreateDrawingSchema = z.object({
 
 export const UpdateDrawingMetadataSchema = z.object({
 	title: z.string().min(1).max(255).optional(),
-	description: z.string().max(1000).optional(),
+	description: z.string().max(1000).nullable().optional(),
 	isPinned: z.boolean().optional(),
 	isPublic: z.boolean().optional(),
 	isArchived: z.boolean().optional(),
