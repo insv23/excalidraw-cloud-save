@@ -15,6 +15,7 @@ import type { DrawingCategory } from "@/types/drawing";
 import { validateAccess } from "@/lib/drawing-utils";
 import { useDrawingsStore } from "@/store/drawings-store";
 import { useDrawings } from "@/hooks/use-drawings";
+import { useDrawing } from "@/hooks/use-drawing";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SidebarLayout() {
@@ -23,7 +24,6 @@ export default function SidebarLayout() {
 	const navigate = useNavigate();
 	const [currentCategory, setCurrentCategory] =
 		useState<DrawingCategory>("recent");
-	const getDrawingById = useDrawingsStore((state) => state.getDrawingById);
 	const createNewDrawing = useDrawingsStore((state) => state.createNewDrawing);
 	const isCreating = useDrawingsStore((state) => state.isCreating);
 
@@ -32,17 +32,24 @@ export default function SidebarLayout() {
 		session?.user ? { category: currentCategory } : undefined
 	);
 
-	// Memoize drawing data to avoid unnecessary lookups
-	const currentDrawing = useMemo(() => {
-		return getDrawingById(drawingId);
-	}, [drawingId, getDrawingById]);
+	// Fetch individual drawing when needed
+	const {
+		drawing: currentDrawing,
+		access: apiAccessResult,
+		isLoading: isLoadingDrawing,
+	} = useDrawing(drawingId);
 
-	// Memoize access validation result
+	// Determine final access result
 	const accessResult = useMemo(() => {
-		if (!drawingId || isPending) return null;
+		if (!drawingId || isPending || isLoadingDrawing) return null;
+		
+		// If we have an access result from the API, use it
+		if (apiAccessResult) return apiAccessResult;
+		
+		// Otherwise validate based on local data
 		const user = session?.user ? { id: session.user.id } : null;
 		return validateAccess(currentDrawing, user);
-	}, [drawingId, currentDrawing, session?.user, isPending]);
+	}, [drawingId, currentDrawing, session?.user, isPending, isLoadingDrawing, apiAccessResult]);
 
 	// Access validation for drawing pages
 	useEffect(() => {
@@ -79,13 +86,15 @@ export default function SidebarLayout() {
 
 	const isLoggedIn = session?.user;
 
-	// Show loading state while session is being fetched
-	if (isPending) {
+	// Show loading state while session is being fetched or drawing is loading
+	if (isPending || (drawingId && isLoadingDrawing)) {
 		return (
 			<div className="flex items-center justify-center h-screen">
 				<div className="text-center space-y-4">
 					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
-					<p className="text-muted-foreground">Loading session...</p>
+					<p className="text-muted-foreground">
+						{isPending ? "Loading session..." : "Loading drawing..."}
+					</p>
 				</div>
 			</div>
 		);
