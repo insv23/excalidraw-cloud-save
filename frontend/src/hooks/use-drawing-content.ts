@@ -23,7 +23,7 @@ export function useDrawingContent(
 		autoSaveDelay?: number;
 	},
 ): UseDrawingContentResult {
-	const { autoSave = true, autoSaveDelay = 2000 } = options || {};
+	const { autoSave = true, autoSaveDelay = 500 } = options || {};
 
 	const [content, setContent] = useState<DrawingContent | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
@@ -114,33 +114,57 @@ export function useDrawingContent(
 	);
 
 	// Debounced save for auto-save functionality
-	const debouncedSave = useRef(
-		debounce(saveContentImmediately, autoSaveDelay)
-	).current;
+	// Recreate when drawingId changes to avoid saving to wrong drawing
+	const debouncedSave = useRef<ReturnType<typeof debounce>>();
+	
+	useEffect(() => {
+		// Cancel previous debounced function
+		if (debouncedSave.current) {
+			debouncedSave.current.cancel();
+		}
+		
+		// Create new debounced function for this drawing
+		debouncedSave.current = debounce(saveContentImmediately, autoSaveDelay);
+		
+		// Cleanup on unmount or when dependencies change
+		return () => {
+			debouncedSave.current?.cancel();
+		};
+	}, [saveContentImmediately, autoSaveDelay]);
 
 	// Public save method that uses debouncing if auto-save is enabled
 	const saveContent = useCallback(
 		(contentToSave: Omit<DrawingContent, "drawingId">) => {
-			if (autoSave) {
-				debouncedSave(contentToSave);
+			if (autoSave && debouncedSave.current) {
+				debouncedSave.current(contentToSave);
 			} else {
 				saveContentImmediately(contentToSave);
 			}
 		},
-		[autoSave, debouncedSave, saveContentImmediately],
+		[autoSave, saveContentImmediately],
 	);
 
-	// Fetch content when drawingId changes
+	// Reset state and fetch content when drawingId changes
 	useEffect(() => {
+		// Cancel any pending saves from previous drawing
+		debouncedSave.current?.cancel();
+		
+		// Reset all state
+		setContent(null);
+		setError(null);
+		setIsSaving(false);
+		lastSavedAt.current = null;
+		
+		// Fetch new content
 		fetchContent();
-	}, [fetchContent]);
+	}, [drawingId, fetchContent]);
 
 	// Clean up debounced function on unmount
 	useEffect(() => {
 		return () => {
-			debouncedSave.cancel?.();
+			debouncedSave.current?.cancel();
 		};
-	}, [debouncedSave]);
+	}, []);
 
 	return {
 		content,

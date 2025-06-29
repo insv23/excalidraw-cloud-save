@@ -48,8 +48,8 @@ export const ExcalidrawCanvas = memo(function ExcalidrawCanvas({
 		setHasLoadedInitial(false);
 	}, [drawingId]);
 
-	// Show loading skeleton while loading
-	if (isLoading) {
+	// Show loading skeleton while loading or content is not ready
+	if (isLoading || !content) {
 		return (
 			<div className="w-full h-full p-4">
 				<div className="space-y-4">
@@ -69,7 +69,11 @@ export const ExcalidrawCanvas = memo(function ExcalidrawCanvas({
 					content
 						? {
 								elements: content.elements as any,
-								appState: content.appState as any,
+								appState: {
+									...content.appState,
+									// Force disable welcome screen to ensure content is shown
+									showWelcomeScreen: false,
+								} as any,
 								files: content.files as any,
 						  }
 						: undefined

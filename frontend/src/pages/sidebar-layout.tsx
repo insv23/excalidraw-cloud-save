@@ -46,6 +46,9 @@ export default function SidebarLayout() {
 		// If we have an access result from the API, use it
 		if (apiAccessResult) return apiAccessResult;
 		
+		// If drawing is still loading or doesn't exist yet, don't validate
+		if (!currentDrawing) return null;
+		
 		// Otherwise validate based on local data
 		const user = session?.user ? { id: session.user.id } : null;
 		return validateAccess(currentDrawing, user);
@@ -53,7 +56,7 @@ export default function SidebarLayout() {
 
 	// Access validation for drawing pages
 	useEffect(() => {
-		if (!drawingId || isPending || !accessResult) return;
+		if (!drawingId || isPending || isLoadingDrawing || !accessResult) return;
 
 		// Handle access denied cases
 		switch (accessResult) {
@@ -74,7 +77,7 @@ export default function SidebarLayout() {
 				// Access granted, continue to render
 				break;
 		}
-	}, [accessResult, drawingId, isPending, navigate]);
+	}, [accessResult, drawingId, isPending, isLoadingDrawing, navigate]);
 
 	const handleCreateNew = async () => {
 		if (!session?.user) return; // Should not happen if button is shown
@@ -169,7 +172,7 @@ export default function SidebarLayout() {
 							</div>
 						</div>
 					) : shouldShowCanvas && drawingId ? (
-						<ExcalidrawCanvas drawingId={drawingId} />
+						<ExcalidrawCanvas key={drawingId} drawingId={drawingId} />
 					) : (
 						<EmptyState
 							onCreateNew={handleCreateNew}
