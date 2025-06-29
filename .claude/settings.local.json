@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.excalidraw.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl:*)"
+    ],
+    "deny": []
+  }
+}

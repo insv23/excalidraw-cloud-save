@@ -4,6 +4,8 @@ import { cors } from "hono/cors";
 import { consola } from "consola";
 import { env } from "./lib/env";
 import { auth } from "./lib/auth";
+import drawingsRouter from "./routes/drawings";
+import drawingContentRouter from "./routes/drawing-content";
 
 const app = new Hono();
 
@@ -27,12 +29,12 @@ app.use("*", async (c, next) => {
 
 // Enable CORS with specific origin for credentials support
 app.use(
-	"/api/auth/**",
+	"/api/**",
 	cors({
 		origin: [env.CORS_ALLOWED_ORIGINS],
 		credentials: true,
 		allowHeaders: ["Content-Type", "Authorization"],
-		allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+		allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 	}),
 );
 
@@ -82,6 +84,10 @@ app.on(["POST", "GET"], "/api/auth/**", async (c) => {
 		throw error;
 	}
 });
+
+// Mount drawing routes
+app.route("/api/drawings", drawingsRouter);
+app.route("/api/drawings", drawingContentRouter);
 
 app.get("/", (c) => {
 	return c.text("Hello Hono!");

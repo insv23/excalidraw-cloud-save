@@ -19,6 +19,235 @@ Excalidraw Cloud Save is a full-stack application that combines Better Auth auth
 - **Backend**: Hono, Better Auth, Drizzle ORM, SQLite, Consola logging
 - **Build Tools**: TypeScript, ESLint, tsup (backend bundling)
 
+## Backend API Reference
+
+### Drawing Management APIs
+
+#### GET /api/drawings
+List user's drawings with filtering and pagination.
+
+**Query Parameters:**
+- `category` (optional): `"recent"` | `"pinned"` | `"public"` | `"archived"` | `"trash"` (default: `"recent"`)
+- `page` (optional): Page number, min 1 (default: `1`)
+- `pageSize` (optional): Items per page, 1-100 (default: `50`)
+- `search` (optional): Search in drawing titles
+
+**Response:**
+```json
+{
+  "drawings": [
+    {
+      "id": "uuid",
+      "ownerId": "user-id",
+      "title": "Drawing Title",
+      "description": "Optional description",
+      "isPinned": false,
+      "isPublic": true,
+      "isArchived": false,
+      "isDeleted": false,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "deletedAt": null
+    }
+  ],
+  "total": 25,
+  "page": 1,
+  "pageSize": 50,
+  "category": "recent"
+}
+```
+
+#### POST /api/drawings/:id
+Create new drawing with frontend-generated UUID.
+
+**URL Parameters:**
+- `id`: Valid UUID v4 format
+
+**Request Body:**
+```json
+{
+  "title": "My Drawing",           // optional, default: "Untitled Drawing"
+  "description": "Description",    // optional
+  "content": {                     // optional
+    "elements": [],                // Excalidraw elements array
+    "appState": {},                // Excalidraw app state
+    "files": {}                    // Excalidraw files object
+  }
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "drawing": { /* drawing object */ }
+}
+```
+
+**Errors:**
+- `400`: Invalid UUID format or request body
+- `409`: Drawing with this ID already exists
+
+#### GET /api/drawings/:id
+Get drawing metadata with smart access control.
+
+**Response:**
+```json
+{
+  "drawing": { /* drawing object */ },
+  "access": "ALLOWED" | "PUBLIC_ACCESS"
+}
+```
+
+**Errors:**
+- `404`: Drawing not found
+- `401`: Authentication required for private drawing
+- `403`: Access denied
+- `410`: Drawing has been deleted (non-owners)
+
+#### PATCH /api/drawings/:id
+Update drawing metadata (requires ownership).
+
+**Request Body:**
+```json
+{
+  "title": "New Title",           // optional
+  "description": "New desc",      // optional
+  "isPinned": true,               // optional
+  "isPublic": false,              // optional
+  "isArchived": true,             // optional
+  "isDeleted": true               // optional - soft delete
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "drawing": { /* updated drawing */ },
+  "message": "Drawing updated successfully"
+}
+```
+
+**Notes:**
+- Setting `isDeleted: true` performs soft delete (sets `deletedAt` timestamp)
+- Setting `isDeleted: false` restores from trash (clears `deletedAt`)
+
+#### DELETE /api/drawings/:id
+Permanently delete drawing from database (requires ownership).
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Drawing permanently deleted",
+  "deletedId": "uuid"
+}
+```
+
+**Notes:**
+- This is irreversible hard deletion
+- Cascade deletes associated content
+
+### Drawing Content APIs
+
+#### GET /api/drawings/:id/content
+Get drawing canvas data with smart access control.
+
+**Response:**
+```json
+{
+  "content": {
+    "drawingId": "uuid",
+    "elements": [],                // Excalidraw elements
+    "appState": {},                // Excalidraw app state  
+    "files": {}                    // Excalidraw files
+  }
+}
+```
+
+**Notes:**
+- Deleted drawings only accessible to owners
+- Public drawings accessible to all users
+
+#### PUT /api/drawings/:id/content
+Save/update drawing canvas data (requires ownership).
+
+**Request Body:**
+```json
+{
+  "elements": [],                  // required - Excalidraw elements
+  "appState": {},                  // required - Excalidraw app state
+  "files": {},                     // required - Excalidraw files
+  "lastModified": "2024-01-01T00:00:00.000Z"  // optional - for optimistic locking
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "message": "Drawing content saved successfully"
+}
+```
+
+**Conflict Response (409):**
+```json
+{
+  "error": "Conflict: Drawing has been modified by another session",
+  "currentUpdatedAt": "2024-01-01T00:00:00.000Z",
+  "lastModified": "2024-01-01T00:00:00.000Z"
+}
+```
+
+### Authentication & Authorization
+
+**Authentication Requirements:**
+- All write operations require valid session
+- Read operations on public drawings allow anonymous access
+- Private drawings require authentication
+- Ownership required for metadata updates and content saves
+
+**Error Response Format:**
+```json
+{
+  "error": "Error message",
+  "details": { /* optional validation details */ }
+}
+```
+
+**HTTP Status Codes:**
+- `200`: Success
+- `201`: Created successfully  
+- `400`: Bad request (validation failed)
+- `401`: Authentication required
+- `403`: Access denied (insufficient permissions)
+- `404`: Resource not found
+- `409`: Conflict (optimistic locking or duplicate)
+- `410`: Gone (soft deleted resource)
+- `500`: Internal server error
+
+### TypeScript Integration
+
+**Hono Context Extensions:**
+```typescript
+// src/types/hono.d.ts
+declare module "hono" {
+  interface ContextVariableMap {
+    user: { id: string };
+    drawing: Drawing;
+    access: AccessResult;
+  }
+}
+```
+
+**Key Types:**
+- `Drawing`: Database drawing metadata
+- `DrawingContent`: Canvas data structure
+- `AccessResult`: Permission check results
+- All request/response types validated with Zod schemas
+
 ## Development Commands
 
 ### Backend Development
