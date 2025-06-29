@@ -3,7 +3,8 @@
     "allow": [
       "WebFetch(domain:docs.excalidraw.com)",
       "WebFetch(domain:github.com)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:hono.dev)"
     ],
     "deny": []
   }

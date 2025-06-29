@@ -27,17 +27,20 @@ app.use("*", async (c, next) => {
 	}
 });
 
-// Enable CORS with specific origin for credentials support
-app.use(
-	"/api/**",
-	cors({
-		origin: [env.CORS_ALLOWED_ORIGINS],
-		credentials: true,
-		allowHeaders: ["Content-Type", "Authorization"],
-		allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-	}),
-);
+// CORS configuration options
+const corsOptions = {
+	origin: [env.CORS_ALLOWED_ORIGINS],
+	credentials: true,
+	allowHeaders: ["Content-Type", "Authorization"],
+	allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+};
 
+// Enable CORS for auth routes
+app.use("/api/auth/**", cors(corsOptions));
+
+// Enable CORS for drawings routes
+app.use("/api/drawings", cors(corsOptions));
+app.use("/api/drawings/*", cors(corsOptions));
 // Better-Auth route handler with logging
 app.on(["POST", "GET"], "/api/auth/**", async (c) => {
 	const request = c.req.raw;
