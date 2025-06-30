@@ -331,6 +331,8 @@ Note: Due to Excalidraw limitations, mobile drawing experience may not be as smo
 
 - **Refactor Frontend Architecture** - Current implementation uses quick patches and needs proper architectural refactoring for maintainability and scalability
 - **Image Support in Excalidraw Canvas** - Implement persistent image storage and retrieval to ensure images don't get lost when drawings are saved/loaded
+- **Add Production Build Process** - Create a streamlined build process for production deployment to handle memory-constrained servers
+- **Fix Text Selection Issue** - Fix the issue where text is automatically selected when reopening a canvas, causing it to blend with the background color and become invisible
 
 ## 🤝 Contributing
 
