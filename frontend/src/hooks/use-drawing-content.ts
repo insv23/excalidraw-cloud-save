@@ -119,7 +119,7 @@ export function useDrawingContent(
 
 	// Debounced save for auto-save functionality
 	// Recreate when drawingId changes to avoid saving to wrong drawing
-	const debouncedSave = useRef<ReturnType<typeof debounce>>();
+	const debouncedSave = useRef<((content: Omit<DrawingContent, "drawingId">) => void) & { cancel: () => void } | undefined>(undefined);
 	
 	useEffect(() => {
 		// Cancel previous debounced function
@@ -132,7 +132,9 @@ export function useDrawingContent(
 		
 		// Cleanup on unmount or when dependencies change
 		return () => {
-			debouncedSave.current?.cancel();
+			if (debouncedSave.current) {
+				debouncedSave.current.cancel();
+			}
 		};
 	}, [saveContentImmediately, autoSaveDelay]);
 
@@ -154,7 +156,9 @@ export function useDrawingContent(
 	// Reset state and fetch content when drawingId changes
 	useEffect(() => {
 		// Cancel any pending saves from previous drawing
-		debouncedSave.current?.cancel();
+		if (debouncedSave.current) {
+			debouncedSave.current.cancel();
+		}
 		
 		// Reset all state
 		setContent(null);
@@ -176,7 +180,9 @@ export function useDrawingContent(
 	// Clean up debounced function on unmount
 	useEffect(() => {
 		return () => {
-			debouncedSave.current?.cancel();
+			if (debouncedSave.current) {
+				debouncedSave.current.cancel();
+			}
 		};
 	}, []);
 

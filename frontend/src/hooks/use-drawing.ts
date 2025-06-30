@@ -16,7 +16,6 @@ interface UseDrawingResult {
  * First checks the local store, then fetches from API if needed
  */
 export function useDrawing(drawingId: string | undefined): UseDrawingResult {
-	const getDrawingById = useDrawingsStore((state) => state.getDrawingById);
 	const updateDrawing = useDrawingsStore((state) => state.updateDrawing);
 	// Subscribe to the specific drawing in the store
 	const storeDrawing = useDrawingsStore((state) => 

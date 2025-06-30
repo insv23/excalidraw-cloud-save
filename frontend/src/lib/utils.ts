@@ -12,7 +12,7 @@ export function cn(...inputs: ClassValue[]) {
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
-): T & { cancel?: () => void } {
+): T & { cancel: () => void } {
   let timeout: NodeJS.Timeout | null = null;
 
   const debounced = (...args: Parameters<T>) => {
@@ -31,5 +31,5 @@ export function debounce<T extends (...args: any[]) => any>(
     }
   };
 
-  return debounced as T & { cancel?: () => void };
+  return debounced as T & { cancel: () => void };
 }

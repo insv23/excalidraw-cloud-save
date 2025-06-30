@@ -148,15 +148,6 @@ export const ExcalidrawCanvas = memo(function ExcalidrawCanvas({
 						: undefined
 				}
 				onChange={handleChange}
-				onKeyDown={(key, event) => {
-					// Prevent Excalidraw's default save behavior
-					if ((event.metaKey || event.ctrlKey) && key === 's') {
-						event.preventDefault();
-						event.stopPropagation();
-						handleManualSave();
-						return false;
-					}
-				}}
 				UIOptions={{
 					canvasActions: {
 						saveToActiveFile: false,
